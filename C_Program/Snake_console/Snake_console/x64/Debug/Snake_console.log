@@ -1,0 +1,8 @@
+﻿  snake.c
+  snake_main.c
+C:\Users\m1102\college\program_design\第7章\Snake_console\Snake_console\snake.c(64,15): warning C4018: “>”: 有符号/无符号不匹配
+C:\Users\m1102\college\program_design\第7章\Snake_console\Snake_console\snake.c(67,23): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+  正在生成代码...
+C:\Users\m1102\college\program_design\第7章\Snake_console\Snake_console\snake.c(25,1): warning C4172: 返回局部变量的地址或临时 : str_t
+  LINK : 没有找到 C:\Users\m1102\college\program_design\第7章\Snake_console\x64\Debug\Snake_console.exe 或上一个增量链接没有生成它；正在执行完全链接
+  Snake_console.vcxproj -> C:\Users\m1102\college\program_design\第7章\Snake_console\x64\Debug\Snake_console.exe
