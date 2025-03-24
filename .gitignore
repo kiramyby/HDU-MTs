@@ -1,70 +1,77 @@
-# ================================================
-# Visual Studio 核心生成文件
-# ================================================
-## IDE自动生成的文件 ##
+# Visual Studio specific files
+.vs/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 *.vcxproj.filters
-*.aps (资源文件缓存)
+*.aps
+ipch/
+*.ipch
 
-## 编译生成文件 ##
-*.exe
-*.dll
-*.lib
-*.exp
-*.pdb  # 程序调试数据库
-*.ilk   # 增量链接文件
-*.obj   # 对象文件
-*.iobj  # C++模块对象文件
-*.ipdb  # C++模块PDB
-
-# ================================================
-# 目录类忽略
-# ================================================
-## 输出目录 ##
-[Bb]in/
-[Oo]bj/
+# Build outputs
 [Dd]ebug/
 [Rr]elease/
-x64/      # 64位编译输出
-[Ww]in32/  # 32位编译输出
-build/    # 通用构建目录
-*.VC.db   # IntelliSense数据库
+x64/
+x86/
+build/
+[Bb]in/
+[Oo]bj/
 
-# ================================================
-# IDE特定文件
-# ================================================
-.vs/              # VS2015+ 工作区设置
-*.opensdf         # 解决方案数据库
-*.sdf             # SQL Server Compact Edition数据库
-*.log             # 编译日志
-[Tt]est[Rr]esult* # 单元测试结果
+# Compiled object files
+*.slo
+*.lo
+*.o
+*.obj
 
-# ================================================
-# 其他通用忽略项
-# ================================================
-*.cache
-*.idb
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
 *.ilk
-*.meta
-*.tmp
-*.dep
-*.manifest
-*.tlog            # 跟踪日志
+*.pdb
+*.idb
+*.pch
+*.tlog
+*.log
+*.lastbuildstate
+*.iobj
+*.ipdb
 
-# ================================================
-# 系统文件
-# ================================================
+# Project-specific intermediate files
+*.vsidx
+*.opendb
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.json.backup
+*.lock
+FileContentIndex/
+
+# System files
 Thumbs.db
-.DS_Store         # Mac系统文件
-Desktop.ini       # Windows文件夹配置
+.DS_Store
+Desktop.ini
 
-# ================================================
-# CMake生成文件（如果使用CMake）
-# ================================================
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
+# Temporary files
+*.swp
+*~
+*.bak
+*.tmp
+
+# Specific to your project structure
+# Add any other project-specific exclusions here
