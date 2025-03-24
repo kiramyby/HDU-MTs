@@ -1,10 +1,28 @@
 ﻿#include "sim.h"
+#include "auth.h"
 
 /* 登录 */
 int Login() {
-    User uid = -1;
-
-    return uid;
+    // 调用身份验证流程
+    int userType = AuthenticationProcess();
+    UserRecord* user = GetCurrentUser();
+    
+    if (userType > 0) {
+        printf("欢迎回来，%s! \n", user->username);
+        
+        // 根据用户类型显示不同的欢迎信息
+        if ((userType & 0xF0) == 0x10) {
+            printf("您以管理员身份登录\n");
+        } else if ((userType & 0xF0) == 0x20) {
+            printf("您以教师身份登录\n");
+        } else if ((userType & 0xF0) == 0x30) {
+            printf("您以学生身份登录\n");
+        }
+    } else {
+        printf("您以访客身份使用系统\n");
+    }
+    
+    return user->id;
 }
 
 /* 视图绘制 */
