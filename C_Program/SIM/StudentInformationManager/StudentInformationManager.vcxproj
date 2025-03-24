@@ -130,7 +130,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="StudentInformationManager.c" />
+    <ClCompile Include="check.c" />
+    <ClCompile Include="crypto.c" />
+    <ClCompile Include="sim.c" />
+    <ClCompile Include="sim_main.c" />
+    <ClCompile Include="store.c" />
+    <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />

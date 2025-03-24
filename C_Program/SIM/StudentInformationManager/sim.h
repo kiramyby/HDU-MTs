@@ -1,65 +1,34 @@
+#ifndef SIM_H
+#define SIM_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <Windows.h>
 #include <time.h>
 #include <string.h>
+#include <tchar.h>
 
-#define MAX_COURSE 5
-#define MAX_STUDENT 100
-#define LEFT_HEAD 30
-#define RIGHT_HEAD 110
-#define UP_HEAD 10
-#define DOWN_HEAD 110
+#include "sim_types.h"
 
-
-/* ================== 数据结构定义 ================== */
-
-// 用户类型
-typedef int User;	// -1 Guest \ 1[5] Admin \ 2[5] Teacher \ 3[5] Student
-
-// 学生结构体
-typedef struct Student {
-    char id[12];             
-    char name[20];
-    struct Grade* grades;   
-    struct Student* next;
-} Student;
-
-// 课程结构体
-typedef struct Course {
-    char code[10];           
-    char name[50];
-    struct Grade* grades;    
-    struct Course* next;
-} Course;
-
-// 成绩结构体
-typedef struct Grade {
-    char student_id[12];     
-    char course_code[10];    
-    float score;
-    struct Grade* next_student;
-    struct Grade* next_course;  
-} Grade;
-
-typedef int (*CompareFunc)(const Grade*, const Grade*);
-
-/* ================== 函数声明 ================== */
-
-int Login();
-int Menu();
+// 只保留函数声明，移除类型定义
+/* 主要功能函数声明 */
+int Login(void);
+int Menu(void);
 void Create(int uid);
 void Read(int uid);
 void Update(int uid);
 void Delete(int uid);
 void Logging(int uid);
-void InputScore();
-void Window();
-void Final();
+void Logout(int uid);
+void InputScore(void);
+void Window(void);
+void Final(void);
 
-void HideCursor();
+/* UI 相关函数声明 */
+void HideCursor(void);
 void GotoXY(int x, int y);
 
+/* 数据处理函数声明 */
 void sortGrades(Grade** headRef, CompareFunc compare, int isStudentView);
 void queryStudent(Student* students);
 void queryCourse(Course* courses);
@@ -68,3 +37,14 @@ void sortCourseGrades(Course* courses);
 Student* findStudent(Student* students, const char* id);
 Course* findCourse(Course* courses, const char* code);
 int compareByScoreDesc(const Grade* a, const Grade* b);
+
+/* 数据存储函数声明 */
+void serialize(Student* students, Course* courses, Grade* grades, const char* filename);
+void deserialize(Student** students, Course** courses, Grade** grades, const char* filename);
+
+/* 数据校验函数声明 */
+unsigned char calculateChecksum(FILE* fp);
+void writeChecksum(FILE* fp);
+int verifyChecksum(FILE* fp);
+
+#endif /* SIM_H */
