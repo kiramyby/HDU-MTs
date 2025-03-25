@@ -1,3 +1,6 @@
+# Visual Studio Code specific files
+.vscode
+
 # Visual Studio specific files
 .vs/
 *.suo

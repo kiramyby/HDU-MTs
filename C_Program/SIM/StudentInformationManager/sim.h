@@ -11,7 +11,6 @@
 
 #include "sim_types.h"
 
-// 只保留函数声明，移除类型定义
 /* 主要功能函数声明 */
 int Login(void);
 int Menu(void);
@@ -28,30 +27,47 @@ void Final(void);
 void HideCursor(void);
 void GotoXY(int x, int y);
 
-/* 数据处理函数声明 */
-void sortGrades(Grade** headRef, CompareFunc compare, int isStudentView);
-void queryStudent(Student* students);
-void queryCourse(Course* courses);
-void sortStudentGrades(Student* students);
-void sortCourseGrades(Course* courses);
+/* 数据查询与处理函数声明 */
 Student* findStudent(Student* students, const char* id);
 Course* findCourse(Course* courses, const char* code);
+Teacher* findTeacher(Teacher* teachers, const char* teacher_id);
+void queryStudent(Student* students, Course* courses);
+void queryCourse(Course* courses, Student* students);
+
+/* 数据排序函数声明 */
+void sortGrades(Grade** headRef, CompareFunc compare, int isStudentView);
+void sortStudentGrades(Student* students);
+void sortCourseGrades(Course* courses);
 int compareByScoreDesc(const Grade* a, const Grade* b);
 
-/* 数据存储函数声明 */
-void serialize(Student* students, Course* courses, Grade* grades, const char* filename);
-void deserialize(Student** students, Course** courses, Grade** grades, const char* filename);
+/* 创建数据函数声明 */
+Student* createStudent(void);
+Course* createCourse(void);
+Teacher* createTeacher(void);
+Grade* createGrade(Student* students, Course* courses);
 
-/* 数据校验函数声明 */
-unsigned char calculateChecksum(FILE* fp);
-void writeChecksum(FILE* fp);
-int verifyChecksum(FILE* fp);
-
-/* 输入缓冲区处理函数声明 */
-void FlushInputBuffer(void);
+/* 文件操作函数声明 */
+Student* loadStudentsFromFile(void);
+Course* loadCoursesFromFile(void);
+Teacher* loadTeachersFromFile(void);
+Grade* loadGradesFromFile(Student* students, Course* courses);
+void saveStudentsToFile(Student* students);
+void saveCoursesToFile(Course* courses);
+void saveTeachersToFile(Teacher* teachers);
+void saveGradesToFile(Grade* grades, Student* students);
+void loadAllData(Student** students, Course** courses, Teacher** teachers, Grade** grades);
+void saveAllData(Student* students, Course* courses, Teacher* teachers, Grade* grades);
 
 /* 文件目录操作函数 */
 void ensureDirectoryExists(const char* path);
 void ensureAllDirectoriesExist(void);
+
+/* 权限管理函数 */
+BOOL IsAdmin(int uid);
+BOOL IsTeacher(int uid);
+BOOL IsStudent(int uid);
+BOOL HasAccessToCourse(int uid, const char* course_code);
+void DisplayRelevantCourses(int uid, Course* courses, int startY);
+void ShowPermissionDeniedMessage(int leftStart, const char* operation);
 
 #endif /* SIM_H */

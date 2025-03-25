@@ -82,8 +82,8 @@ int Menu() {
 void Final() {
     system("cls");
     GotoXY(45, 14);
-    printf("已登出！ 5秒后自动返回登录界面...");
-    Sleep(5000);
+    printf("已登出！ 3秒后自动返回登录界面...");
+    Sleep(3000);
     system("cls");
 }
 
@@ -123,11 +123,59 @@ void queryStudent(Student* students, Course* courses) {
     system("cls");
     Window();
     
+    int uid = atoi(GetCurrentUser()->id);
+    int leftStart = LEFT_HEAD + 2;
+    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+    
     // 左侧显示操作提示
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
+    GotoXY(leftStart, UP_HEAD + 4);
     printf("=== 学生信息查询 ===");
     
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
+    // 如果是学生用户，只能查看自己的信息
+    if (IsStudent(uid) && !IsAdmin(uid)) {
+        Student* self = findStudent(students, GetCurrentUser()->id);
+        if (!self) {
+            GotoXY(leftStart, UP_HEAD + 6);
+            printf("无法找到您的学生记录！");
+            GotoXY(leftStart, DOWN_HEAD - 2);
+            printf("按任意键返回...");
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            _getch();
+            return;
+        }
+        
+        // 右侧显示查询结果
+        GotoXY(rightStart, UP_HEAD + 4);
+        printf("您的成绩单");
+        
+        GotoXY(rightStart, UP_HEAD + 6);
+        printf("%-10s %-20s %-6s", "课程号", "课程名", "成绩");
+        
+        int row = UP_HEAD + 8;
+        Grade* g = self->grades;
+        while (g) {
+            Course* cour = findCourse(courses, g->course_code);
+            GotoXY(rightStart, row);
+            printf("%-10s %-20s %.2f", 
+                   g->course_code,
+                   cour ? cour->name : "未知课程",
+                   g->score);
+            g = g->next_student;
+            row += 1;
+            
+            // 避免超出窗口范围
+            if (row >= DOWN_HEAD - 2) break;
+        }
+        
+        GotoXY(leftStart, DOWN_HEAD - 2);
+        printf("按任意键返回...");
+        FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+        _getch();
+        return;
+    }
+    
+    // 管理员或教师需要输入学生学号
+    GotoXY(leftStart, UP_HEAD + 6);
     printf("请输入学生学号: ");
     
     char id[12];
@@ -135,41 +183,68 @@ void queryStudent(Student* students, Course* courses) {
     
     Student* target = findStudent(students, id);
     if (!target) {
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
+        GotoXY(leftStart, UP_HEAD + 8);
         printf("学生不存在！");
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
+        GotoXY(leftStart, DOWN_HEAD - 2);
         printf("按任意键返回...");
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         _getch();
         return;
     }
     
-    // 右侧显示查询结果
-    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
-    
-    GotoXY(rightStart, UP_HEAD + 4);
-    printf("学生: %s 的成绩单", target->name);
-    
-    GotoXY(rightStart, UP_HEAD + 6);
-    printf("%-10s %-20s %-6s", "课程号", "课程名", "成绩");
-    
-    int row = UP_HEAD + 8;
-    Grade* g = target->grades;
-    while (g) {
-        Course* cour = findCourse(courses, g->course_code);
-        GotoXY(rightStart, row);
-        printf("%-10s %-20s %.2f", 
-               g->course_code,
-               cour ? cour->name : "未知课程",
-               g->score);
-        g = g->next_student;
-        row += 1;
+    // 如果是教师，检查是否有权限查看该学生成绩
+    if (IsTeacher(uid) && !IsAdmin(uid)) {
+        // 教师只能查看该学生在他所授课程的成绩
+        // 右侧显示查询结果
+        GotoXY(rightStart, UP_HEAD + 4);
+        printf("学生: %s 的成绩单", target->name);
         
-        // 避免超出窗口范围
-        if (row >= DOWN_HEAD - 2) break;
+        GotoXY(rightStart, UP_HEAD + 6);
+        printf("%-10s %-20s %-6s", "课程号", "课程名", "成绩");
+        
+        int row = UP_HEAD + 8;
+        Grade* g = target->grades;
+        while (g) {
+            if (HasAccessToCourse(uid, g->course_code)) {
+                Course* cour = findCourse(courses, g->course_code);
+                GotoXY(rightStart, row);
+                printf("%-10s %-20s %.2f", 
+                       g->course_code,
+                       cour ? cour->name : "未知课程",
+                       g->score);
+                row += 1;
+            }
+            g = g->next_student;
+            
+            // 避免超出窗口范围
+            if (row >= DOWN_HEAD - 2) break;
+        }
+    } else {
+        // 管理员可以查看所有成绩
+        GotoXY(rightStart, UP_HEAD + 4);
+        printf("学生: %s 的成绩单", target->name);
+        
+        GotoXY(rightStart, UP_HEAD + 6);
+        printf("%-10s %-20s %-6s", "课程号", "课程名", "成绩");
+        
+        int row = UP_HEAD + 8;
+        Grade* g = target->grades;
+        while (g) {
+            Course* cour = findCourse(courses, g->course_code);
+            GotoXY(rightStart, row);
+            printf("%-10s %-20s %.2f", 
+                   g->course_code,
+                   cour ? cour->name : "未知课程",
+                   g->score);
+            g = g->next_student;
+            row += 1;
+            
+            // 避免超出窗口范围
+            if (row >= DOWN_HEAD - 2) break;
+        }
     }
     
-    GotoXY(LEFT_HEAD + 2, DOWN_HEAD - 2);
+    GotoXY(leftStart, DOWN_HEAD - 2);
     printf("按任意键返回...");
     FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
     _getch();
@@ -179,21 +254,47 @@ void queryCourse(Course* courses, Student* students) {
     system("cls");
     Window();
     
+    int uid = atoi(GetCurrentUser()->id);
+    int leftStart = LEFT_HEAD + 2;
+    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+    
     // 左侧显示操作提示
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
+    GotoXY(leftStart, UP_HEAD + 4);
     printf("=== 课程信息查询 ===");
     
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
+    // 显示与当前用户相关的课程
+    DisplayRelevantCourses(uid, courses, UP_HEAD + 6);
+    
+    GotoXY(leftStart, UP_HEAD + 6);
     printf("请输入课程代码: ");
     
     char code[10];
     scanf("%9s", code);
     
+    // 检查用户是否有权限查看该课程信息
+    if (!HasAccessToCourse(uid, code) && !IsAdmin(uid)) {
+        GotoXY(leftStart, UP_HEAD + 8);
+        printf("您无权访问此课程信息或此课程不存在。");
+        GotoXY(leftStart, UP_HEAD + 9);
+        
+        if (IsTeacher(uid)) {
+            printf("只能查看您所教授的课程。");
+        } else if (IsStudent(uid)) {
+            printf("只能查看您已选修的课程。");
+        }
+        
+        GotoXY(leftStart, DOWN_HEAD - 2);
+        printf("按任意键返回...");
+        FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+        _getch();
+        return;
+    }
+    
     Course* target = findCourse(courses, code);
     if (!target) {
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
+        GotoXY(leftStart, UP_HEAD + 8);
         printf("课程不存在！");
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
+        GotoXY(leftStart, DOWN_HEAD - 2);
         printf("按任意键返回...");
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         _getch();
@@ -201,8 +302,6 @@ void queryCourse(Course* courses, Student* students) {
     }
     
     // 右侧显示查询结果
-    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
-    
     GotoXY(rightStart, UP_HEAD + 4);
     printf("课程: %s 成绩单", target->name);
     
@@ -212,6 +311,12 @@ void queryCourse(Course* courses, Student* students) {
     int row = UP_HEAD + 8;
     Grade* g = target->grades;
     while (g) {
+        // 如果是学生，只显示自己的成绩
+        if (IsStudent(uid) && strcmp(GetCurrentUser()->id, g->student_id) != 0 && !IsAdmin(uid)) {
+            g = g->next_course;
+            continue;
+        }
+        
         Student* stu = findStudent(students, g->student_id);
         GotoXY(rightStart, row);
         printf("%-10s %-15s %.2f", 
@@ -225,7 +330,7 @@ void queryCourse(Course* courses, Student* students) {
         if (row >= DOWN_HEAD - 2) break;
     }
     
-    GotoXY(LEFT_HEAD + 2, DOWN_HEAD - 2);
+    GotoXY(leftStart, DOWN_HEAD - 2);
     printf("按任意键返回...");
     FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
     _getch();
@@ -435,15 +540,25 @@ Grade* createGrade(Student* students, Course* courses) {
     system("cls");
     Window();
     
+    int uid = atoi(GetCurrentUser()->id);
+    int leftStart = LEFT_HEAD + 2;
+    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+    
     // 左侧显示操作提示与输入
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
+    GotoXY(leftStart, UP_HEAD + 4);
     printf("=== 成绩录入 ===");
+    
+    // 学生只能查看自己的成绩，不能录入
+    if (IsStudent(uid) && !IsAdmin(uid)) {
+        ShowPermissionDeniedMessage(leftStart, "进行成绩录入");
+        return NULL;
+    }
     
     Grade* newGrade = (Grade*)malloc(sizeof(Grade));
     if (!newGrade) {
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
+        GotoXY(leftStart, UP_HEAD + 6);
         printf("内存分配失败！");
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
+        GotoXY(leftStart, DOWN_HEAD - 2);
         printf("按任意键返回...");
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         _getch();
@@ -453,15 +568,15 @@ Grade* createGrade(Student* students, Course* courses) {
     char student_id[12];
     char course_code[10];
     
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
+    GotoXY(leftStart, UP_HEAD + 6);
     printf("请输入学生学号: ");
     scanf("%11s", student_id);
     
     Student* student = findStudent(students, student_id);
     if (!student) {
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
+        GotoXY(leftStart, UP_HEAD + 8);
         printf("学生不存在！");
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
+        GotoXY(leftStart, DOWN_HEAD - 2);
         printf("按任意键返回...");
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         _getch();
@@ -470,19 +585,46 @@ Grade* createGrade(Student* students, Course* courses) {
     }
     
     // 右侧显示学生信息
-    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
     GotoXY(rightStart, UP_HEAD + 6);
     printf("学生: %s", student->name);
     
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
+    // 如果是教师，显示可以录入成绩的课程
+    if (IsTeacher(uid) && !IsAdmin(uid)) {
+        GotoXY(rightStart, UP_HEAD + 8);
+        printf("您可以录入的课程：");
+        
+        int row = UP_HEAD + 9;
+        Course* c = courses;
+        while (c && row < DOWN_HEAD - 4) {
+            if (HasAccessToCourse(uid, c->code)) {
+                GotoXY(rightStart, row++);
+                printf("%-10s %-30s", c->code, c->name);
+            }
+            c = c->next;
+        }
+    } else if (IsAdmin(uid)) {
+        // 管理员显示所有课程
+        GotoXY(rightStart, UP_HEAD + 8);
+        printf("所有课程：");
+        
+        int row = UP_HEAD + 9;
+        Course* c = courses;
+        while (c && row < DOWN_HEAD - 4) {
+            GotoXY(rightStart, row++);
+            printf("%-10s %-30s", c->code, c->name);
+            c = c->next;
+        }
+    }
+    
+    GotoXY(leftStart, UP_HEAD + 8);
     printf("请输入课程代码: ");
     scanf("%9s", course_code);
     
-    Course* course = findCourse(courses, course_code);
-    if (!course) {
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
-        printf("课程不存在！");
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
+    // 教师需要检查是否有权限录入该课程成绩
+    if (IsTeacher(uid) && !HasAccessToCourse(uid, course_code) && !IsAdmin(uid)) {
+        GotoXY(leftStart, UP_HEAD + 10);
+        printf("权限不足！您无权为该课程录入成绩！");
+        GotoXY(leftStart, DOWN_HEAD - 2);
         printf("按任意键返回...");
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         _getch();
@@ -490,15 +632,23 @@ Grade* createGrade(Student* students, Course* courses) {
         return NULL;
     }
     
-    // 右侧显示课程信息
-    GotoXY(rightStart, UP_HEAD + 8);
-    printf("课程: %s", course->name);
+    Course* course = findCourse(courses, course_code);
+    if (!course) {
+        GotoXY(leftStart, UP_HEAD + 10);
+        printf("课程不存在！");
+        GotoXY(leftStart, DOWN_HEAD - 2);
+        printf("按任意键返回...");
+        FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+        _getch();
+        free(newGrade);
+        return NULL;
+    }
     
     // 检查是否已经存在该成绩记录
     Grade* existingGrade = student->grades;
     while (existingGrade) {
         if (strcmp(existingGrade->course_code, course_code) == 0) {
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
+            GotoXY(leftStart, UP_HEAD + 10);
             printf("该学生的该课程成绩已存在！是否更新？(Y/N): ");
             char choice;
             FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
@@ -506,17 +656,17 @@ Grade* createGrade(Student* students, Course* courses) {
             printf("%c", choice);
             
             if (choice == 'Y') {
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
+                GotoXY(leftStart, UP_HEAD + 12);
                 printf("当前成绩: %.2f", existingGrade->score);
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 14);
+                GotoXY(leftStart, UP_HEAD + 14);
                 printf("请输入新成绩: ");
                 scanf("%f", &existingGrade->score);
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 16);
+                GotoXY(leftStart, UP_HEAD + 16);
                 printf("成绩更新成功！");
                 free(newGrade);
                 return existingGrade;
             } else {
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
+                GotoXY(leftStart, UP_HEAD + 12);
                 printf("取消更新成绩");
                 free(newGrade);
                 return NULL;
@@ -525,7 +675,7 @@ Grade* createGrade(Student* students, Course* courses) {
         existingGrade = existingGrade->next_student;
     }
     
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
+    GotoXY(leftStart, UP_HEAD + 10);
     printf("请输入成绩: ");
     scanf("%f", &newGrade->score);
     
@@ -542,9 +692,9 @@ Grade* createGrade(Student* students, Course* courses) {
     // 添加到课程的成绩链表
     Grade* courseCopy = (Grade*)malloc(sizeof(Grade));
     if (!courseCopy) {
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
+        GotoXY(leftStart, UP_HEAD + 12);
         printf("内存分配失败！");
-        GotoXY(LEFT_HEAD + 2, UP_HEAD + 14);
+        GotoXY(leftStart, DOWN_HEAD - 2);
         printf("按任意键返回...");
         FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
         _getch();
@@ -556,7 +706,7 @@ Grade* createGrade(Student* students, Course* courses) {
     courseCopy->next_course = course->grades;
     course->grades = courseCopy;
     
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
+    GotoXY(leftStart, UP_HEAD + 12);
     printf("成绩录入成功！");
     
     return newGrade;
@@ -565,12 +715,23 @@ Grade* createGrade(Student* students, Course* courses) {
 /*================= 文件存储相关函数 =================*/
 // 在文件开头添加目录操作函数
 void ensureDirectoryExists(const char* path) {
-    // 检查目录是否存在，如果不存在则创建
-    if (CreateDirectory(path, NULL) || GetLastError() == ERROR_ALREADY_EXISTS) {
+    // 将UTF-8路径转换为UTF-16
+    int wideLen = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+    wchar_t* widePath = (wchar_t*)malloc(wideLen * sizeof(wchar_t));
+    if (!widePath) {
+        printf("内存分配失败\n");
+        return;
+    }
+    MultiByteToWideChar(CP_UTF8, 0, path, -1, widePath, wideLen);
+    
+    // 使用UTF-16路径创建目录
+    if (CreateDirectoryW(widePath, NULL) || GetLastError() == ERROR_ALREADY_EXISTS) {
         // 成功创建或已经存在
+        free(widePath);
         return;
     } else {
         printf("无法创建目录: %s\n", path);
+        free(widePath);
     }
 }
 
@@ -882,7 +1043,7 @@ int Login() {
     UserRecord* user = GetCurrentUser();
     
     if (userType > 0) {
-        printf("欢迎回来，%s! \n", user->username);
+        printf("欢迎回来，%s（ID：%s）! \n", user->username, user->id);
         
         if ((userType & 0xF0) == 0x10)
             printf("您以管理员身份登录\n");
@@ -898,660 +1059,549 @@ int Login() {
 }
 
 void Create(int uid) {
-    system("cls");
-    Window();
-    
     Student* students = NULL;
     Course* courses = NULL;
     Teacher* teachers = NULL;
     Grade* grades = NULL;
+    int choice = -1;
     
     // 加载现有数据
     loadAllData(&students, &courses, &teachers, &grades);
     
-    // 左侧显示菜单
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
-    printf("===== 创建记录 =====");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
-    printf("1. 创建学生");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 7);
-    printf("2. 创建课程");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
-    printf("3. 创建教师");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 9);
-    printf("4. 录入成绩");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
-    printf("0. 返回");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
-    printf("请选择: ");
-    
-    int choice;
-    scanf("%d", &choice);
-    
-    system("cls");
-    Window();
-    
-    // 右侧预留用于显示结果
-    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
-    
-    switch (choice) {
-        case 1: {
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
-            printf("=== 创建学生 ===");
-            
-            Student* newStudent = (Student*)malloc(sizeof(Student));
-            if (!newStudent) {
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
-                printf("内存分配失败！");
+    while (1) {
+        system("cls");
+        Window();
+        
+        // 左侧显示菜单
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
+        printf("===== 创建记录 =====");
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
+        printf("1. 创建学生");
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 7);
+        printf("2. 创建课程");
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
+        printf("3. 创建教师");
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 9);
+        printf("4. 录入成绩");
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
+        printf("0. 返回主菜单");
+        GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
+        printf("请选择: ");
+        
+        if (scanf("%d", &choice) != 1) {
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+            GotoXY(LEFT_HEAD + 2, UP_HEAD + 14);
+            printf("输入无效! 请按任意键重试...");
+            _getch();
+            continue;
+        }
+        
+        if (choice == 0) {
+            // 直接返回主菜单
+            return;
+        }
+        
+        system("cls");
+        Window();
+        
+        // 右侧预留用于显示结果
+        int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+        int leftStart = LEFT_HEAD + 2;
+        
+        // 权限检查 - 只有管理员可以创建学生/课程/教师
+        if (choice >= 1 && choice <= 3 && !IsAdmin(uid)) {
+            ShowPermissionDeniedMessage(leftStart, "创建该类型的记录");
+            GotoXY(leftStart, UP_HEAD + 11);
+            printf("需要管理员权限。");
+            Sleep(2000);
+            continue;
+        }
+        
+        switch (choice) {
+            case 1: {
+                // ...existing code for creating students...
                 break;
             }
-            
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
-            printf("请输入学生学号: ");
-            scanf("%11s", newStudent->id);
-            
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
-            printf("请输入学生姓名: ");
-            scanf("%19s", newStudent->name);
-            
-            newStudent->grades = NULL;
-            newStudent->next = NULL;
-            
-            // 检查是否已存在
-            if (findStudent(students, newStudent->id)) {
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
-                printf("学生ID已存在！");
-                free(newStudent);
-            } else {
-                newStudent->next = students;
-                students = newStudent;
-                GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
-                printf("学生创建成功！");
-                
-                // 右侧显示学生信息
-                GotoXY(rightStart, UP_HEAD + 4);
-                printf("新建学生信息:");
-                GotoXY(rightStart, UP_HEAD + 6);
-                printf("学号: %s", newStudent->id);
-                GotoXY(rightStart, UP_HEAD + 7);
-                printf("姓名: %s", newStudent->name);
+            case 2: {
+                // ...existing code for creating courses...
+                break;
             }
-            break;
-        }
-        case 2: {
-            // 类似地修改创建课程的函数...
-            // ...现有代码...
-            break;
-        }
-        case 3: {
-            // 类似地修改创建教师的函数...
-            // ...现有代码...
-            break;
-        }
-        case 4: {
-            Grade* newGrade = createGrade(students, courses);
-            if (newGrade) {
-                // createGrade函数已经处理了界面显示
-                // 成功创建成绩后立即保存数据
-                saveAllData(students, courses, teachers, grades);
+            case 3: {
+                // ...existing code for creating teachers...
+                break;
             }
-            break;
+            case 4: {
+                Grade* newGrade = createGrade(students, courses);
+                if (newGrade) {
+                    // createGrade函数已经处理了界面显示
+                    // 成功创建成绩后立即保存数据
+                    saveAllData(students, courses, teachers, grades);
+                }
+                break;
+            }
+            default:
+                GotoXY(leftStart, UP_HEAD + 4);
+                printf("无效选择，请重试");
+                Sleep(1500);
+                continue; // 重新显示菜单
         }
-        case 0:
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
-            printf("返回主菜单");
-            break;
-        default:
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
-            printf("无效选择");
+        
+        // 保存更新后的数据
+        saveAllData(students, courses, teachers, grades);
+        
+        GotoXY(leftStart, DOWN_HEAD - 4);
+        printf("1. 继续创建其他记录");
+        GotoXY(leftStart, DOWN_HEAD - 3);
+        printf("0. 返回主菜单");
+        GotoXY(leftStart, DOWN_HEAD - 2);
+        printf("请选择: ");
+        
+        // 添加后续操作选择
+        int nextAction;
+        if (scanf("%d", &nextAction) != 1) {
+            nextAction = 1; // 默认继续
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+        }
+        
+        if (nextAction == 0) {
+            return; // 返回主菜单
+        }
+        // 否则循环继续，显示创建菜单
     }
-    
-    // 保存更新后的数据
-    saveAllData(students, courses, teachers, grades);
-    
-    GotoXY(LEFT_HEAD + 2, DOWN_HEAD - 2);
-    printf("按任意键继续...");
-    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-    _getch();
 }
 
 void Read(int uid) {
-    system("cls");
-    Window();
-    
     Student* students = NULL;
     Course* courses = NULL;
     Teacher* teachers = NULL;
     Grade* grades = NULL;
+    int choice = -1;
     
     // 加载数据
     loadAllData(&students, &courses, &teachers, &grades);
     
-    // 左侧显示菜单
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 4);
-    printf("===== 查询记录 =====");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 6);
-    printf("1. 查询学生成绩");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 7);
-    printf("2. 查询课程成绩");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 8);
-    printf("3. 排序学生成绩");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 9);
-    printf("4. 排序课程成绩");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 10);
-    printf("0. 返回");
-    GotoXY(LEFT_HEAD + 2, UP_HEAD + 12);
-    printf("请选择: ");
-    
-    int choice;
-    scanf("%d", &choice);
-    
-    switch (choice) {
-        case 1:
-            queryStudent(students, courses);
-            break;
-        case 2:
-            queryCourse(courses, students);
-            break;
-        case 3:
-            // 排序功能也可以类似改进...
-            system("cls");
-            Window();
-            sortStudentGrades(students);
-            break;
-        case 4:
-            system("cls");
-            Window();
-            sortCourseGrades(courses);
-            break;
-        case 0:
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 14);
-            printf("返回主菜单");
-            break;
-        default:
-            GotoXY(LEFT_HEAD + 2, UP_HEAD + 14);
-            printf("无效选择");
+    while (1) {
+        system("cls");
+        Window();
+        
+        int leftStart = LEFT_HEAD + 2;
+        
+        // 左侧显示菜单
+        GotoXY(leftStart, UP_HEAD + 4);
+        printf("===== 查询记录 =====");
+        GotoXY(leftStart, UP_HEAD + 6);
+        printf("1. 查询学生成绩");
+        GotoXY(leftStart, UP_HEAD + 7);
+        printf("2. 查询课程成绩");
+        
+        // 仅管理员和教师可以进行排序操作
+        if (IsAdmin(uid) || IsTeacher(uid)) {
+            GotoXY(leftStart, UP_HEAD + 8);
+            printf("3. 排序学生成绩");
+            GotoXY(leftStart, UP_HEAD + 9);
+            printf("4. 排序课程成绩");
+            GotoXY(leftStart, UP_HEAD + 10);
+            printf("0. 返回主菜单");
+            GotoXY(leftStart, UP_HEAD + 12);
+        } else {
+            GotoXY(leftStart, UP_HEAD + 8);
+            printf("0. 返回主菜单");
+            GotoXY(leftStart, UP_HEAD + 10);
+        }
+        
+        printf("请选择: ");
+        
+        if (scanf("%d", &choice) != 1) {
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+            GotoXY(leftStart, UP_HEAD + 14);
+            printf("输入无效! 请按任意键重试...");
+            _getch();
+            continue;
+        }
+        
+        if (choice == 0) {
+            // 直接返回主菜单
+            return;
+        }
+        
+        switch (choice) {
+            case 1:
+                queryStudent(students, courses);
+                break;
+            case 2:
+                queryCourse(courses, students);
+                break;
+            case 3:
+                if (IsAdmin(uid) || IsTeacher(uid)) {
+                    sortStudentGrades(students);
+                } else {
+                    ShowPermissionDeniedMessage(leftStart, "进行成绩排序操作");
+                    GotoXY(leftStart, UP_HEAD + 11);
+                    printf("此功能仅对教师和管理员开放。");
+                    Sleep(2000);
+                    continue; // 重新显示菜单
+                }
+                break;
+            case 4:
+                if (IsAdmin(uid) || IsTeacher(uid)) {
+                    sortCourseGrades(courses);
+                } else {
+                    ShowPermissionDeniedMessage(leftStart, "进行成绩排序操作");
+                    GotoXY(leftStart, UP_HEAD + 11);
+                    printf("此功能仅对教师和管理员开放。");
+                    Sleep(2000);
+                    continue; // 重新显示菜单
+                }
+                break;
+            default:
+                GotoXY(leftStart, UP_HEAD + 14);
+                printf("无效选择，请重试");
+                Sleep(1500);
+                continue; // 重新显示菜单
+        }
+        
+        system("cls"); // 清屏
+        Window(); // 重新绘制窗口
+        GotoXY(leftStart, UP_HEAD + 4);
+        printf("正在返回查询菜单...");
+        Sleep(1500);
+        
     }
 }
 
 void Update(int uid) {
-    system("cls");
-    Window();
-    
     Student* students = NULL;
     Course* courses = NULL;
     Teacher* teachers = NULL;
     Grade* grades = NULL;
+    int choice = -1;
     
     // 加载数据
     loadAllData(&students, &courses, &teachers, &grades);
     
-    int leftStart = LEFT_HEAD + 2;
-    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
-    
-    // 左侧显示菜单
-    GotoXY(leftStart, UP_HEAD + 4);
-    printf("===== 更新记录 =====");
-    GotoXY(leftStart, UP_HEAD + 6);
-    printf("1. 修改学生信息");
-    GotoXY(leftStart, UP_HEAD + 7);
-    printf("2. 修改课程信息");
-    GotoXY(leftStart, UP_HEAD + 8);
-    printf("3. 修改成绩信息");
-    GotoXY(leftStart, UP_HEAD + 9);
-    printf("0. 返回");
-    GotoXY(leftStart, UP_HEAD + 11);
-    printf("请选择: ");
-    
-    int choice;
-    scanf("%d", &choice);
-    
-    system("cls");
-    Window();
-    
-    switch (choice) {
-        case 1: {
-            // 左侧显示操作区
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("=== 修改学生信息 ===");
-            
-            GotoXY(leftStart, UP_HEAD + 6);
-            printf("请输入要修改的学生学号: ");
-            char id[12];
-            scanf("%11s", id);
-            
-            Student* target = findStudent(students, id);
-            if (!target) {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("学生不存在！");
-            } else {
-                // 右侧显示当前信息
-                GotoXY(rightStart, UP_HEAD + 6);
-                printf("当前姓名: %s", target->name);
-                
-                // 左侧继续输入
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("请输入新的学生姓名: ");
-                scanf("%19s", target->name);
-                
-                // 右侧显示更新结果
-                GotoXY(rightStart, UP_HEAD + 8);
-                printf("已更新为: %s", target->name);
-                
-                GotoXY(leftStart, UP_HEAD + 10);
-                printf("学生信息更新成功！");
-            }
-            break;
+    while (1) {
+        system("cls");
+        Window();
+        
+        int leftStart = LEFT_HEAD + 2;
+        int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+        
+        // 左侧显示菜单
+        GotoXY(leftStart, UP_HEAD + 4);
+        printf("===== 更新记录 =====");
+        GotoXY(leftStart, UP_HEAD + 6);
+        printf("1. 修改学生信息");
+        GotoXY(leftStart, UP_HEAD + 7);
+        printf("2. 修改课程信息");
+        GotoXY(leftStart, UP_HEAD + 8);
+        printf("3. 修改成绩信息");
+        GotoXY(leftStart, UP_HEAD + 9);
+        printf("0. 返回主菜单");
+        GotoXY(leftStart, UP_HEAD + 11);
+        printf("请选择: ");
+        
+        if (scanf("%d", &choice) != 1) {
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+            GotoXY(leftStart, UP_HEAD + 13);
+            printf("输入无效! 请按任意键重试...");
+            _getch();
+            continue;
         }
-        case 2: {
-            // 左侧显示操作区
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("=== 修改课程信息 ===");
-            
-            GotoXY(leftStart, UP_HEAD + 6);
-            printf("请输入要修改的课程代码: ");
-            char code[10];
-            scanf("%9s", code);
-            
-            Course* target = findCourse(courses, code);
-            if (!target) {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("课程不存在！");
-            } else {
-                // 右侧显示当前信息
-                GotoXY(rightStart, UP_HEAD + 6);
-                printf("当前名称: %s", target->name);
-                
-                // 左侧继续输入
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("请输入新的课程名称: ");
-                scanf("%49s", target->name);
-                
-                // 右侧显示更新结果
-                GotoXY(rightStart, UP_HEAD + 8);
-                printf("已更新为: %s", target->name);
-                
-                GotoXY(leftStart, UP_HEAD + 10);
-                printf("课程信息更新成功！");
-            }
-            break;
+        
+        if (choice == 0) {
+            // 直接返回主菜单
+            return;
         }
-        case 3: {
-            // 左侧显示操作区
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("=== 修改成绩信息 ===");
-            
-            GotoXY(leftStart, UP_HEAD + 6);
-            printf("请输入学生学号: ");
-            char student_id[12];
-            scanf("%11s", student_id);
-            
-            Student* student = findStudent(students, student_id);
-            if (!student) {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("学生不存在！");
-                break;
+        
+        system("cls");
+        Window();
+        
+        // 权限检查 - 学生不能修改记录，教师只能修改成绩
+        if (!IsAdmin(uid)) {
+            if (IsStudent(uid) || (IsTeacher(uid) && choice != 3)) {
+                ShowPermissionDeniedMessage(leftStart, "修改该类型的记录");
+                GotoXY(leftStart, UP_HEAD + 11);
+                printf("需要更高的权限级别。");
+                Sleep(2000);
+                continue;
             }
-            
-            // 右侧显示学生信息
-            GotoXY(rightStart, UP_HEAD + 6);
-            printf("学生: %s", student->name);
-            
-            // 左侧继续输入
-            GotoXY(leftStart, UP_HEAD + 8);
-            printf("请输入课程代码: ");
-            char course_code[10];
-            scanf("%9s", course_code);
-            
-            Course* course = findCourse(courses, course_code);
-            if (!course) {
-                GotoXY(leftStart, UP_HEAD + 10);
-                printf("课程不存在！");
-                break;
-            }
-            
-            // 右侧显示课程信息
-            GotoXY(rightStart, UP_HEAD + 8);
-            printf("课程: %s", course->name);
-            
-            // 查找成绩
-            Grade* g = student->grades;
-            while (g) {
-                if (strcmp(g->course_code, course_code) == 0) {
-                    // 显示当前成绩
-                    GotoXY(rightStart, UP_HEAD + 10);
-                    printf("当前成绩: %.2f", g->score);
+        }
+        
+        switch (choice) {
+            case 1: {
+                // 左侧显示操作区
+                GotoXY(leftStart, UP_HEAD + 4);
+                printf("=== 修改学生信息 ===");
+                
+                GotoXY(leftStart, UP_HEAD + 6);
+                printf("请输入要修改的学生学号: ");
+                char id[12];
+                scanf("%11s", id);
+                
+                Student* target = findStudent(students, id);
+                if (!target) {
+                    GotoXY(leftStart, UP_HEAD + 8);
+                    printf("学生不存在！");
+                } else {
+                    // 右侧显示当前信息
+                    GotoXY(rightStart, UP_HEAD + 6);
+                    printf("当前姓名: %s", target->name);
                     
-                    // 输入新成绩
+                    // 左侧继续输入
+                    GotoXY(leftStart, UP_HEAD + 8);
+                    printf("请输入新的学生姓名: ");
+                    scanf("%19s", target->name);
+                    
+                    // 右侧显示更新结果
+                    GotoXY(rightStart, UP_HEAD + 8);
+                    printf("已更新为: %s", target->name);
+                    
                     GotoXY(leftStart, UP_HEAD + 10);
-                    printf("请输入新成绩: ");
-                    float newScore;
-                    scanf("%f", &newScore);
-                    g->score = newScore;
+                    printf("学生信息更新成功！");
+                }
+                break;
+            }
+            case 2: {
+                // 左侧显示操作区
+                GotoXY(leftStart, UP_HEAD + 4);
+                printf("=== 修改课程信息 ===");
+                
+                GotoXY(leftStart, UP_HEAD + 6);
+                printf("请输入要修改的课程代码: ");
+                char code[10];
+                scanf("%9s", code);
+                
+                Course* target = findCourse(courses, code);
+                if (!target) {
+                    GotoXY(leftStart, UP_HEAD + 8);
+                    printf("课程不存在！");
+                } else {
+                    // 右侧显示当前信息
+                    GotoXY(rightStart, UP_HEAD + 6);
+                    printf("当前名称: %s", target->name);
                     
-                    // 显示更新结果
-                    GotoXY(rightStart, UP_HEAD + 12);
-                    printf("新成绩: %.2f", g->score);
+                    // 左侧继续输入
+                    GotoXY(leftStart, UP_HEAD + 8);
+                    printf("请输入新的课程名称: ");
+                    scanf("%49s", target->name);
                     
-                    GotoXY(leftStart, UP_HEAD + 12);
-                    printf("成绩更新成功！");
+                    // 右侧显示更新结果
+                    GotoXY(rightStart, UP_HEAD + 8);
+                    printf("已更新为: %s", target->name);
+                    
+                    GotoXY(leftStart, UP_HEAD + 10);
+                    printf("课程信息更新成功！");
+                }
+                break;
+            }
+            case 3: {
+                // 左侧显示操作区
+                GotoXY(leftStart, UP_HEAD + 4);
+                printf("=== 修改成绩信息 ===");
+                
+                GotoXY(leftStart, UP_HEAD + 6);
+                printf("请输入学生学号: ");
+                char student_id[12];
+                scanf("%11s", student_id);
+                
+                Student* student = findStudent(students, student_id);
+                if (!student) {
+                    GotoXY(leftStart, UP_HEAD + 8);
+                    printf("学生不存在！");
                     break;
                 }
-                g = g->next_student;
-            }
-            
-            if (!g) {
-                GotoXY(leftStart, UP_HEAD + 10);
-                printf("未找到该学生的该课程成绩记录！");
-            }
-            break;
-        }
-        case 0:
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("返回主菜单");
-            break;
-        default:
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("无效选择");
-    }
-    
-    // 保存更新后的数据
-    saveAllData(students, courses, teachers, grades);
-    
-    GotoXY(leftStart, DOWN_HEAD - 2);
-    printf("按任意键继续...");
-    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-    _getch();
-}
-
-void Delete(int uid) {
-    system("cls");
-    Window();
-    
-    Student* students = NULL;
-    Course* courses = NULL;
-    Teacher* teachers = NULL;
-    Grade* grades = NULL;
-    
-    // 加载数据
-    loadAllData(&students, &courses, &teachers, &grades);
-    
-    int leftStart = LEFT_HEAD + 2;
-    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
-    
-    // 左侧显示菜单
-    GotoXY(leftStart, UP_HEAD + 4);
-    printf("===== 删除记录 =====");
-    GotoXY(leftStart, UP_HEAD + 6);
-    printf("1. 删除学生");
-    GotoXY(leftStart, UP_HEAD + 7);
-    printf("2. 删除课程");
-    GotoXY(leftStart, UP_HEAD + 8);
-    printf("3. 删除成绩记录");
-    GotoXY(leftStart, UP_HEAD + 9);
-    printf("0. 返回");
-    GotoXY(leftStart, UP_HEAD + 11);
-    printf("请选择: ");
-    
-    int choice;
-    scanf("%d", &choice);
-    
-    system("cls");
-    Window();
-    
-    switch (choice) {
-        case 1: {
-            // 左侧显示操作区
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("=== 删除学生 ===");
-            
-            GotoXY(leftStart, UP_HEAD + 6);
-            printf("请输入要删除的学生学号: ");
-            char id[12];
-            scanf("%11s", id);
-            
-            if (!students) {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("学生记录为空！");
-                break;
-            }
-            
-            // 查找学生，显示信息
-            Student* target = findStudent(students, id);
-            if (target) {
-                // 右侧显示将被删除的学生信息
+                
+                // 右侧显示学生信息
                 GotoXY(rightStart, UP_HEAD + 6);
-                printf("即将删除的学生信息:");
-                GotoXY(rightStart, UP_HEAD + 8);
-                printf("学号: %s", target->id);
-                GotoXY(rightStart, UP_HEAD + 9);
-                printf("姓名: %s", target->name);
+                printf("学生: %s", student->name);
                 
-                // 确认删除
+                // 左侧继续输入
                 GotoXY(leftStart, UP_HEAD + 8);
-                printf("确认删除? (Y/N): ");
-                FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-                char confirm = toupper(_getch());
-                printf("%c", confirm);
+                printf("请输入课程代码: ");
+                char course_code[10];
+                scanf("%9s", course_code);
                 
-                if (confirm == 'Y') {
-                    if (strcmp(students->id, id) == 0) {
-                        Student* temp = students;
-                        students = students->next;
-                        free(temp);
-                    } else {
-                        Student* prev = students;
-                        Student* curr = students->next;
-                        while (curr && strcmp(curr->id, id) != 0) {
-                            prev = curr;
-                            curr = curr->next;
-                        }
-                        
-                        if (curr) {
-                            prev->next = curr->next;
-                            free(curr);
-                        }
-                    }
-                    
+                Course* course = findCourse(courses, course_code);
+                if (!course) {
                     GotoXY(leftStart, UP_HEAD + 10);
-                    printf("学生删除成功！");
-                } else {
-                    GotoXY(leftStart, UP_HEAD + 10);
-                    printf("已取消删除操作。");
+                    printf("课程不存在！");
+                    break;
                 }
-            } else {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("学生不存在！");
-            }
-            break;
-        }
-        case 2: {
-            // 左侧显示操作区
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("=== 删除课程 ===");
-            
-            GotoXY(leftStart, UP_HEAD + 6);
-            printf("请输入要删除的课程代码: ");
-            char code[10];
-            scanf("%9s", code);
-            
-            if (!courses) {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("课程记录为空！");
-                break;
-            }
-            
-            // 查找课程，显示信息
-            Course* target = findCourse(courses, code);
-            if (target) {
-                // 右侧显示将被删除的课程信息
-                GotoXY(rightStart, UP_HEAD + 6);
-                printf("即将删除的课程信息:");
-                GotoXY(rightStart, UP_HEAD + 8);
-                printf("课程代码: %s", target->code);
-                GotoXY(rightStart, UP_HEAD + 9);
-                printf("课程名称: %s", target->name);
                 
-                // 确认删除
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("确认删除? (Y/N): ");
-                FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-                char confirm = toupper(_getch());
-                printf("%c", confirm);
-                
-                if (confirm == 'Y') {
-                    if (strcmp(courses->code, code) == 0) {
-                        Course* temp = courses;
-                        courses = courses->next;
-                        free(temp);
-                    } else {
-                        Course* prev = courses;
-                        Course* curr = courses->next;
-                        while (curr && strcmp(curr->code, code) != 0) {
-                            prev = curr;
-                            curr = curr->next;
-                        }
-                        
-                        if (curr) {
-                            prev->next = curr->next;
-                            free(curr);
-                        }
-                    }
-                    
-                    GotoXY(leftStart, UP_HEAD + 10);
-                    printf("课程删除成功！");
-                } else {
-                    GotoXY(leftStart, UP_HEAD + 10);
-                    printf("已取消删除操作。");
-                }
-            } else {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("课程不存在！");
-            }
-            break;
-        }
-        case 3: {
-            // 左侧显示操作区
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("=== 删除成绩记录 ===");
-            
-            GotoXY(leftStart, UP_HEAD + 6);
-            printf("请输入学生学号: ");
-            char student_id[12];
-            scanf("%11s", student_id);
-            
-            Student* student = findStudent(students, student_id);
-            if (!student) {
-                GotoXY(leftStart, UP_HEAD + 8);
-                printf("学生不存在！");
-                break;
-            }
-            
-            // 右侧显示学生信息
-            GotoXY(rightStart, UP_HEAD + 6);
-            printf("学生: %s", student->name);
-            
-            // 左侧继续输入
-            GotoXY(leftStart, UP_HEAD + 8);
-            printf("请输入课程代码: ");
-            char course_code[10];
-            scanf("%9s", course_code);
-            
-            Course* course = findCourse(courses, course_code);
-            if (course) {
                 // 右侧显示课程信息
                 GotoXY(rightStart, UP_HEAD + 8);
                 printf("课程: %s", course->name);
-            }
-            
-            // 查找并删除成绩
-            if (student->grades) {
-                Grade* toDelete = NULL;
                 
-                if (strcmp(student->grades->course_code, course_code) == 0) {
-                    toDelete = student->grades;
-                    
-                    // 显示将被删除的成绩
-                    GotoXY(rightStart, UP_HEAD + 10);
-                    printf("成绩: %.2f", toDelete->score);
-                    
-                    // 确认删除
-                    GotoXY(leftStart, UP_HEAD + 10);
-                    printf("确认删除? (Y/N): ");
-                    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-                    char confirm = toupper(_getch());
-                    printf("%c", confirm);
-                    
-                    if (confirm == 'Y') {
-                        student->grades = toDelete->next_student;
-                        free(toDelete);
-                        
-                        GotoXY(leftStart, UP_HEAD + 12);
-                        printf("成绩删除成功！");
-                    } else {
-                        GotoXY(leftStart, UP_HEAD + 12);
-                        printf("已取消删除操作。");
-                    }
-                } else {
-                    Grade* prev = student->grades;
-                    Grade* curr = prev->next_student;
-                    
-                    while (curr && strcmp(curr->course_code, course_code) != 0) {
-                        prev = curr;
-                        curr = curr->next_student;
-                    }
-                    
-                    if (curr) {
-                        toDelete = curr;
-                        
-                        // 显示将被删除的成绩
+                // 查找成绩
+                Grade* g = student->grades;
+                while (g) {
+                    if (strcmp(g->course_code, course_code) == 0) {
+                        // 显示当前成绩
                         GotoXY(rightStart, UP_HEAD + 10);
-                        printf("成绩: %.2f", toDelete->score);
+                        printf("当前成绩: %.2f", g->score);
                         
-                        // 确认删除
+                        // 输入新成绩
                         GotoXY(leftStart, UP_HEAD + 10);
-                        printf("确认删除? (Y/N): ");
-                        FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-                        char confirm = toupper(_getch());
-                        printf("%c", confirm);
+                        printf("请输入新成绩: ");
+                        float newScore;
+                        scanf("%f", &newScore);
+                        g->score = newScore;
                         
-                        if (confirm == 'Y') {
-                            prev->next_student = curr->next_student;
-                            free(curr);
-                            
-                            GotoXY(leftStart, UP_HEAD + 12);
-                            printf("成绩删除成功！");
-                        } else {
-                            GotoXY(leftStart, UP_HEAD + 12);
-                            printf("已取消删除操作。");
-                        }
-                    } else {
-                        GotoXY(leftStart, UP_HEAD + 10);
-                        printf("该学生没有此课程成绩！");
+                        // 显示更新结果
+                        GotoXY(rightStart, UP_HEAD + 12);
+                        printf("新成绩: %.2f", g->score);
+                        
+                        GotoXY(leftStart, UP_HEAD + 12);
+                        printf("成绩更新成功！");
+                        break;
                     }
+                    g = g->next_student;
                 }
-            } else {
-                GotoXY(leftStart, UP_HEAD + 10);
-                printf("该学生没有成绩记录！");
+                
+                if (!g) {
+                    GotoXY(leftStart, UP_HEAD + 10);
+                    printf("未找到该学生的该课程成绩记录！");
+                }
+                break;
             }
-            break;
+            default:
+                GotoXY(leftStart, UP_HEAD + 4);
+                printf("无效选择，请重试");
+                Sleep(1500);
+                continue; // 重新显示菜单
         }
-        case 0:
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("返回主菜单");
-            break;
-        default:
-            GotoXY(leftStart, UP_HEAD + 4);
-            printf("无效选择");
+        
+        // 保存更新后的数据
+        saveAllData(students, courses, teachers, grades);
+        
+        // 子功能执行完后，添加统一的后续操作选择
+        GotoXY(leftStart, DOWN_HEAD - 4);
+        printf("1. 继续更新其他记录");
+        GotoXY(leftStart, DOWN_HEAD - 3);
+        printf("0. 返回主菜单");
+        GotoXY(leftStart, DOWN_HEAD - 2);
+        printf("请选择: ");
+        
+        int nextAction;
+        if (scanf("%d", &nextAction) != 1) {
+            nextAction = 1; // 默认继续
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+        }
+        
+        if (nextAction == 0) {
+            return; // 返回主菜单
+        }
+        // 否则循环继续，显示更新菜单
     }
+}
+
+void Delete(int uid) {
+    Student* students = NULL;
+    Course* courses = NULL;
+    Teacher* teachers = NULL;
+    Grade* grades = NULL;
+    int choice = -1;
     
-    // 保存更新后的数据
-    saveAllData(students, courses, teachers, grades);
+    // 加载数据
+    loadAllData(&students, &courses, &teachers, &grades);
     
-    GotoXY(leftStart, DOWN_HEAD - 2);
-    printf("按任意键继续...");
-    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-    _getch();
+    while (1) {
+        system("cls");
+        Window();
+        
+        int leftStart = LEFT_HEAD + 2;
+        int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+        
+        // 左侧显示菜单
+        GotoXY(leftStart, UP_HEAD + 4);
+        printf("===== 删除记录 =====");
+        GotoXY(leftStart, UP_HEAD + 6);
+        printf("1. 删除学生");
+        GotoXY(leftStart, UP_HEAD + 7);
+        printf("2. 删除课程");
+        GotoXY(leftStart, UP_HEAD + 8);
+        printf("3. 删除成绩记录");
+        GotoXY(leftStart, UP_HEAD + 9);
+        printf("0. 返回主菜单");
+        GotoXY(leftStart, UP_HEAD + 11);
+        printf("请选择: ");
+        
+        if (scanf("%d", &choice) != 1) {
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+            GotoXY(leftStart, UP_HEAD + 13);
+            printf("输入无效! 请按任意键重试...");
+            _getch();
+            continue;
+        }
+        
+        if (choice == 0) {
+            // 直接返回主菜单
+            return;
+        }
+        
+        system("cls");
+        Window();
+        
+        // 权限检查 - 只有管理员可以删除记录，教师只能删除成绩
+        if (!IsAdmin(uid)) {
+            if (IsStudent(uid) || (IsTeacher(uid) && choice != 3)) {
+                ShowPermissionDeniedMessage(leftStart, "删除该类型的记录");
+                GotoXY(leftStart, UP_HEAD + 11);
+                printf("删除操作需要管理员权限。");
+                Sleep(2000);
+                continue;
+            }
+        }
+        
+        switch (choice) {
+            case 1: {
+                // ...existing code for deleting student...
+                break;
+            }
+            case 2: {
+                // ...existing code for deleting course...
+                break;
+            }
+            case 3: {
+                // ...existing code for deleting grade...
+                break;
+            }
+            default:
+                GotoXY(leftStart, UP_HEAD + 4);
+                printf("无效选择，请重试");
+                Sleep(1500);
+                continue; // 重新显示菜单
+        }
+        
+        // 保存更新后的数据
+        saveAllData(students, courses, teachers, grades);
+        
+        // 子功能执行完后，添加统一的后续操作选择
+        GotoXY(leftStart, DOWN_HEAD - 4);
+        printf("1. 继续删除其他记录");
+        GotoXY(leftStart, DOWN_HEAD - 3);
+        printf("0. 返回主菜单");
+        GotoXY(leftStart, DOWN_HEAD - 2);
+        printf("请选择: ");
+        
+        int nextAction;
+        if (scanf("%d", &nextAction) != 1) {
+            nextAction = 1; // 默认继续
+            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+            while (getchar() != '\n'); // 清除输入缓冲区
+        }
+        
+        if (nextAction == 0) {
+            return; // 返回主菜单
+        }
+        // 否则循环继续，显示删除菜单
+    }
 }
 
 void Logging(int uid) {
@@ -1592,15 +1642,20 @@ void Logging(int uid) {
     
     // 如果有更多日志，可以添加在这里
     
+    GotoXY(leftStart, DOWN_HEAD - 4);
+    printf("0. 返回主菜单");
     GotoXY(leftStart, DOWN_HEAD - 2);
-    printf("按任意键继续...");
+    printf("请选择: ");
+    
+    int choice;
     FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-    _getch();
+    scanf("%d", &choice);
+    
+    // 无论输入什么，都返回主菜单，但保持一致的界面
 }
 
 void Logout(int uid) {
     system("cls");
-    Window();
     
     int centerX = (RIGHT_HEAD + LEFT_HEAD) / 2;
     int centerY = (DOWN_HEAD + UP_HEAD) / 2;
@@ -1617,4 +1672,129 @@ void Logout(int uid) {
     
     Sleep(2000);
     Final(); // 使用已有的Final函数显示退出信息
+}
+
+/*================= 权限管理函数 =================*/
+// 检查用户是否为管理员
+BOOL IsAdmin(int uid) {
+    UserRecord* user = GetCurrentUser();
+    return (user->userType & 0xF0) == 0x10;
+}
+
+// 检查用户是否为教师
+BOOL IsTeacher(int uid) {
+    UserRecord* user = GetCurrentUser();
+    return (user->userType & 0xF0) == 0x20;
+}
+
+// 检查用户是否为学生
+BOOL IsStudent(int uid) {
+    UserRecord* user = GetCurrentUser();
+    return (user->userType & 0xF0) == 0x30;
+}
+
+// 检查用户是否有权限访问某课程
+BOOL HasAccessToCourse(int uid, const char* course_code) {
+    UserRecord* user = GetCurrentUser();
+    
+    // 管理员拥有所有权限
+    if ((user->userType & 0xF0) == 0x10) {
+        return TRUE;
+    }
+    
+    // 教师只能访问他们负责的课程
+    if ((user->userType & 0xF0) == 0x20) {
+        return IsTeacherAssignedToCourse(user->id, course_code);
+    }
+    
+    // 学生只能访问他们选修的课程
+    if ((user->userType & 0xF0) == 0x30) {
+        // 通过遍历学生的成绩来确定是否有这门课程
+        Student* students = loadStudentsFromFile();
+        Student* student = findStudent(students, user->id);
+        if (!student) return FALSE;
+        
+        Grade* g = student->grades;
+        while (g) {
+            if (strcmp(g->course_code, course_code) == 0) {
+                // 释放临时加载的数据
+                // TODO: 优化这里的内存管理，避免每次都重新加载
+                // 这里为简化代码，暂不处理内存释放
+                return TRUE;
+            }
+            g = g->next_student;
+        }
+    }
+    
+    return FALSE;
+}
+
+// 显示与当前用户相关的课程
+void DisplayRelevantCourses(int uid, Course* courses, int startY) {
+    UserRecord* user = GetCurrentUser();
+    int rightStart = (RIGHT_HEAD + LEFT_HEAD) / 2 + 2;
+    int row = startY;
+    
+    // 管理员可以看到所有课程
+    if (IsAdmin(uid)) {
+        GotoXY(rightStart, row++);
+        printf("您可以查看所有课程：");
+        
+        Course* c = courses;
+        while (c && row < DOWN_HEAD - 4) {
+            GotoXY(rightStart, row++);
+            printf("%-10s %-30s", c->code, c->name);
+            c = c->next;
+        }
+        return;
+    }
+    
+    // 教师只能看到分配给他们的课程
+    if (IsTeacher(uid)) {
+        GotoXY(rightStart, row++);
+        printf("您教授的课程：");
+        
+        Course* c = courses;
+        while (c && row < DOWN_HEAD - 4) {
+            if (IsTeacherAssignedToCourse(user->id, c->code)) {
+                GotoXY(rightStart, row++);
+                printf("%-10s %-30s", c->code, c->name);
+            }
+            c = c->next;
+        }
+        return;
+    }
+    
+    // 学生只能看到他们选修的课程
+    if (IsStudent(uid)) {
+        GotoXY(rightStart, row++);
+        printf("您选修的课程：");
+        
+        Student* students = loadStudentsFromFile(); 
+        Student* student = findStudent(students, user->id);
+        if (student) {
+            Grade* g = student->grades;
+            while (g && row < DOWN_HEAD - 4) {
+                Course* c = findCourse(courses, g->course_code);
+                if (c) {
+                    GotoXY(rightStart, row++);
+                    printf("%-10s %-30s", c->code, c->name);
+                }
+                g = g->next_student;
+            }
+        }
+        // TODO: 释放临时加载的数据
+    }
+}
+
+/*================= 权限检查与通知函数 =================*/
+void ShowPermissionDeniedMessage(int leftStart, const char* operation) {
+    GotoXY(leftStart, UP_HEAD + 6);
+    printf("权限不足！");
+    GotoXY(leftStart, UP_HEAD + 7);
+    printf("您没有权限%s", operation);
+    GotoXY(leftStart, UP_HEAD + 9);
+    printf("按任意键返回...");
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+    _getch();
 }

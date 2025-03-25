@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "sim.h": "c",
-        "sim_types.h": "c"
+        "sim_types.h": "c",
+        "auth.h": "c"
     }
 }

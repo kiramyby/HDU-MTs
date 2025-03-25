@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#pragma comment(lib, "bcrypt.lib")
-
 // 当前用户信息
 static UserRecord currentUser = { {0}, -1, "", "" };
 
@@ -12,7 +10,7 @@ UserRecord* GetCurrentUser() {
     return &currentUser;
 }
 
-// 密码处理 - 改为直接保存明文
+// 密码处理 - 直接保存明文
 BOOL SavePassword(const char* password, PasswordRecord* record) {
     strncpy(record->password, password, MAX_PASSWORD_LEN - 1);
     record->password[MAX_PASSWORD_LEN - 1] = '\0';
@@ -116,120 +114,172 @@ BOOL GetUserByUsername(const char* username, char* id) {
 }
 
 // 用户注册
-void RegisterUser() {
-    char username[MAX_USERNAME_LEN];
+int RegisterUser() {
     char id[MAX_ID_LEN];
+    char username[MAX_USERNAME_LEN];
     char password[MAX_PASSWORD_LEN];
-    PasswordRecord record;
-    int userType = 35;  // 默认注册为学生
-    int choice;
-
-    printf("\n=== 注册 ===\n");
+    char confirm[MAX_PASSWORD_LEN];
+    int userType = 0;
     
-    printf("用户名: ");
-    fgets(username, MAX_USERNAME_LEN, stdin);
-    username[strcspn(username, "\n")] = 0;
-    
-    // 检查用户名是否已存在
-    char existingId[MAX_ID_LEN];
-    if (GetUserByUsername(username, existingId)) {
-        printf("用户名已存在！\n");
-        return;
-    }
-    
-    printf("用户ID: ");
-    fgets(id, MAX_ID_LEN, stdin);
-    id[strcspn(id, "\n")] = 0;
+    system("cls");
+    printf("\n===== 用户注册 =====\n");
+    printf("请输入ID (最多11个字符): ");
+    scanf("%11s", id);
     
     // 检查ID是否已存在
-    int dummy;
+    PasswordRecord dummy;
+    int dummyType;
     char dummyName[MAX_USERNAME_LEN];
-    if (LoadUserData(id, &record, &dummy, dummyName)) {
-        printf("ID已存在！\n");
-        return;
+    if (LoadUserData(id, &dummy, &dummyType, dummyName)) {
+        printf("该ID已被注册！\n");
+        Sleep(2000);
+        return -1;
     }
-
-    printf("密码: ");
-    fgets(password, MAX_PASSWORD_LEN, stdin);
-    password[strcspn(password, "\n")] = 0;
     
-    printf("用户类型:\n");
-    printf("1. 管理员\n");
-    printf("2. 教师\n");
-    printf("3. 学生 (默认)\n");
-    printf("请选择: ");
+    printf("请输入用户名 (最多63个字符): ");
+    scanf("%63s", username);
+    
+    printf("请选择用户类型:\n");
+    printf("1. 教师\n");
+    printf("2. 学生\n");
+    printf("请选择 (1-2): ");
+    
+    int choice;
     scanf("%d", &choice);
-    getchar(); // 清除换行符
-
-    switch (choice) {
-    case 1:
-        userType = 15;  // 管理员权限
-        break;
-    case 2:
-        userType = 25;  // 教师权限
-        break;
-    case 3:
-    default:
-        userType = 35;  // 学生权限
+    
+    // 转换为内部使用的用户类型编码
+    switch(choice) {
+        case 1:
+            userType = 0x20; // 教师
+            break;
+        case 2:
+            userType = 0x30; // 学生
+            break;
+        default:
+            printf("无效选择！\n");
+            Sleep(2000);
+            return -1;
     }
-
-    if (SavePassword(password, &record)) {
-        if (SaveUserData(id, &record, userType, username)) {
-            printf("注册成功！\n");
-        } else {
-            printf("保存失败！\n");
+    
+    printf("请输入密码: ");
+    int i = 0;
+    while (i < MAX_PASSWORD_LEN - 1) {
+        char ch = _getch();
+        if (ch == '\r' || ch == '\n') {
+            password[i] = '\0';
+            break;
+        } else if (ch == '\b' && i > 0) { // 处理退格键
+            printf("\b \b");
+            i--;
+        } else if (ch >= 32 && ch <= 126) { // 可打印字符
+            password[i++] = ch;
+            printf("*");
         }
+    }
+    password[i] = '\0';
+    printf("\n");
+    
+    printf("请确认密码: ");
+    i = 0;
+    while (i < MAX_PASSWORD_LEN - 1) {
+        char ch = _getch();
+        if (ch == '\r' || ch == '\n') {
+            confirm[i] = '\0';
+            break;
+        } else if (ch == '\b' && i > 0) { // 处理退格键
+            printf("\b \b");
+            i--;
+        } else if (ch >= 32 && ch <= 126) { // 可打印字符
+            confirm[i++] = ch;
+            printf("*");
+        }
+    }
+    confirm[i] = '\0';
+    printf("\n");
+    
+    if (strcmp(password, confirm) != 0) {
+        printf("两次输入的密码不一致！\n");
+        Sleep(2000);
+        return -1;
+    }
+    
+    PasswordRecord record;
+    SavePassword(password, &record);
+    
+    if (SaveUserData(id, &record, userType, username)) {
+        printf("注册成功！您现在可以使用ID: %s 登录。\n", id);
+        Sleep(2000);
+        return userType;
     } else {
-        printf("密码处理失败！\n");
+        printf("注册失败，请稍后重试。\n");
+        Sleep(2000);
+        return -1;
     }
 }
 
 // 用户登录并返回用户类型
 int LoginUser() {
-    char username[MAX_USERNAME_LEN];
+    UserRecord userRecord;
     char id[MAX_ID_LEN];
     char password[MAX_PASSWORD_LEN];
-    PasswordRecord record;
-    int userType = -1;
-
-    printf("\n=== 登录 ===\n");
-    printf("用户名: ");
-    fgets(username, MAX_USERNAME_LEN, stdin);
-    username[strcspn(username, "\n")] = 0;
-
-    // 通过用户名查找ID
-    if (!GetUserByUsername(username, id)) {
-        printf("用户不存在！\n");
-        return -1;
-    }
-
-    // 通过ID加载用户数据
-    char loadedUsername[MAX_USERNAME_LEN];
-    if (!LoadUserData(id, &record, &userType, loadedUsername)) {
-        printf("用户数据损坏！\n");
-        return -1;
-    }
-
-    printf("密码: ");
-    fgets(password, MAX_PASSWORD_LEN, stdin);
-    password[strcspn(password, "\n")] = 0;
-
-    if (VerifyPassword(password, &record)) {
-        printf("登录成功！\n");
+    int tries = 0;
+    
+    while (tries < 3) {
+        system("cls");
+        printf("\n===== 用户登录 =====\n");
+        printf("请输入ID (或输入 'q' 返回): ");
+        scanf("%11s", id);
         
-        // 保存当前用户信息
-        memcpy(&currentUser.password, &record, sizeof(PasswordRecord));
-        currentUser.userType = userType;
-        strncpy(currentUser.id, id, MAX_ID_LEN-1);
-        currentUser.id[MAX_ID_LEN-1] = '\0';
-        strncpy(currentUser.username, loadedUsername, MAX_USERNAME_LEN-1);
-        currentUser.username[MAX_USERNAME_LEN-1] = '\0';
+        if (strcmp(id, "q") == 0) {
+            return -1;
+        }
         
-        return userType;
-    } else {
-        printf("密码错误！\n");
-        return -1;
+        printf("请输入密码: ");
+        int i = 0;
+        while (i < MAX_PASSWORD_LEN - 1) {
+            char ch = _getch();
+            if (ch == '\r' || ch == '\n') {
+                password[i] = '\0';
+                break;
+            } else if (ch == '\b' && i > 0) { // 处理退格键
+                printf("\b \b");
+                i--;
+            } else if (ch >= 32 && ch <= 126) { // 可打印字符
+                password[i++] = ch;
+                printf("*");
+            }
+        }
+        password[i] = '\0';
+        printf("\n");
+        
+        PasswordRecord stored;
+        int userType;
+        char username[MAX_USERNAME_LEN];
+        
+        if (LoadUserData(id, &stored, &userType, username)) {
+            if (VerifyPassword(password, &stored)) {
+                // 设置当前用户信息
+                currentUser.userType = userType;
+                strncpy(currentUser.id, id, MAX_ID_LEN);
+                currentUser.id[MAX_ID_LEN-1] = '\0';
+                strncpy(currentUser.username, username, MAX_USERNAME_LEN);
+                currentUser.username[MAX_USERNAME_LEN-1] = '\0';
+                memcpy(&currentUser.password, &stored, sizeof(PasswordRecord));
+                
+                printf("登录成功！欢迎 %s (ID: %s)!\n", username, id);
+                Sleep(1000);
+                return userType;
+            }
+        }
+        
+        tries++;
+        printf("ID或密码错误！还有 %d 次尝试机会。\n", 3 - tries);
+        Sleep(1500);
     }
+    
+    printf("登录失败次数过多，请稍后再试。\n");
+    Sleep(2000);
+    return -1;
 }
 
 // 身份认证流程 - 改进输入处理

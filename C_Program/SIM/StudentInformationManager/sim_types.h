@@ -18,11 +18,6 @@
 #define RIGHT_HEAD 150
 #define DOWN_HEAD 42
 
-/* 加密相关常量 */
-#define SALT_SIZE 32
-#define HASH_SIZE 64
-#define ITERATIONS 10000
-
 /* 基本类型定义 */
 typedef int User;  // -1 Guest \ 1[5] Admin \ 2[5] Teacher \ 3[5] Student
 

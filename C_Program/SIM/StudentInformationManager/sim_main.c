@@ -8,8 +8,6 @@ int main(){
     // 确保所有数据目录存在
     ensureAllDirectoriesExist();
     
-    // 移除字体设置代码，使用系统默认字体
-    
     int uid = -1, op = -1;
     srand((unsigned int)time(0));
 
@@ -21,7 +19,7 @@ int main(){
             system("cls"); // 清屏确保UI干净
             GotoXY(LEFT_HEAD, UP_HEAD);
             printf("Welcome to Student Information Manager\n");
-            printf("Please login first\n");
+            printf("Please login first with your ID\n");
             uid = Login();
             continue;
         }
@@ -35,21 +33,12 @@ int main(){
             break;
         case 1:
             Read(uid);
-            printf("按任意键返回主菜单...");
-            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-            _getch(); // 等待用户按键
             break;
         case 2:
             Update(uid);
-            printf("按任意键返回主菜单...");
-            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-            _getch(); // 等待用户按键
             break;
         case 3:
             Delete(uid);
-            printf("按任意键返回主菜单...");
-            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-            _getch(); // 等待用户按键
             break;
         case 4:
             Logging(uid);
@@ -62,12 +51,8 @@ int main(){
             break;
         }
         
-        // 只有在登出时才回到登录界面，其他操作返回菜单
+        // 简化的菜单导航逻辑 - 只有在登出时才不需要等待用户按键
         if (op != 5) {
-            system("cls");
-            printf("按任意键返回主菜单...");
-            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-            _getch(); // 使用_getch()代替getchar()等待按键
             system("cls");
         }
     }

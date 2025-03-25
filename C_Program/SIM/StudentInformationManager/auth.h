@@ -13,7 +13,7 @@
 /* 用户记录结构体 */
 typedef struct {
     PasswordRecord password;
-    int userType;            // 用户类型: 15=管理员, 25=教师, 35=学生, -1=访客
+    int userType;            // 用户类型: 0x10 管理员, 0x20 教师, 0x30 学生
     char id[MAX_ID_LEN];     // 用户ID，主键
     char username[MAX_USERNAME_LEN];  // 用户名显示
 } UserRecord;
@@ -28,7 +28,7 @@ BOOL LoadUserData(const char* id, PasswordRecord* record, int* userType, char* u
 BOOL GetUserByUsername(const char* username, char* id);
 
 // 用户界面函数
-void RegisterUser(void);
+int RegisterUser(void);  // 修改返回类型为int，匹配实现
 int LoginUser(void);
 int AuthenticationProcess(void);
 UserRecord* GetCurrentUser(void);
