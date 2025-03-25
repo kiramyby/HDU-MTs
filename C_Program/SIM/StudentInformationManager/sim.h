@@ -7,6 +7,7 @@
 #include <time.h>
 #include <string.h>
 #include <tchar.h>
+#include <conio.h> // 添加对_getch()的支持
 
 #include "sim_types.h"
 
@@ -20,7 +21,6 @@ void Update(int uid);
 void Delete(int uid);
 void Logging(int uid);
 void Logout(int uid);
-void InputScore(void);
 void Window(void);
 void Final(void);
 
@@ -46,5 +46,12 @@ void deserialize(Student** students, Course** courses, Grade** grades, const cha
 unsigned char calculateChecksum(FILE* fp);
 void writeChecksum(FILE* fp);
 int verifyChecksum(FILE* fp);
+
+/* 输入缓冲区处理函数声明 */
+void FlushInputBuffer(void);
+
+/* 文件目录操作函数 */
+void ensureDirectoryExists(const char* path);
+void ensureAllDirectoriesExist(void);
 
 #endif /* SIM_H */

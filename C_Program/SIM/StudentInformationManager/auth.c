@@ -12,62 +12,24 @@ UserRecord* GetCurrentUser() {
     return &currentUser;
 }
 
-// 生成安全盐值
-BOOL GenerateSalt(BYTE* salt, DWORD length) {
-    return BCryptGenRandom(
-        NULL,
-        salt,
-        length,
-        BCRYPT_USE_SYSTEM_PREFERRED_RNG
-    ) == 0;
+// 密码处理 - 改为直接保存明文
+BOOL SavePassword(const char* password, PasswordRecord* record) {
+    strncpy(record->password, password, MAX_PASSWORD_LEN - 1);
+    record->password[MAX_PASSWORD_LEN - 1] = '\0';
+    return TRUE;
 }
 
-// 密码哈希生成
-BOOL HashPassword(const wchar_t* password, PasswordRecord* record) {
-    if (!GenerateSalt(record->salt, SALT_SIZE)) return FALSE;
-    
-    record->iterations = ITERATIONS;
-
-    return BCryptDeriveKeyPBKDF2(
-        BCRYPT_SHA512_ALG_HANDLE,
-        (PUCHAR)password,
-        (ULONG)(wcslen(password) * sizeof(wchar_t)),
-        record->salt,
-        SALT_SIZE,
-        ITERATIONS,
-        record->hash,
-        HASH_SIZE,
-        0
-    ) == 0;
-}
-
-// 密码验证
-BOOL VerifyPassword(const wchar_t* attempt, PasswordRecord* stored) {
-    BYTE attemptHash[HASH_SIZE];
-
-    NTSTATUS status = BCryptDeriveKeyPBKDF2(
-        BCRYPT_SHA512_ALG_HANDLE,
-        (PUCHAR)attempt,
-        (ULONG)(wcslen(attempt) * sizeof(wchar_t)),
-        stored->salt,
-        SALT_SIZE,
-        stored->iterations,
-        attemptHash,
-        HASH_SIZE,
-        0
-    );
-
-    if (status != 0) return FALSE;
-
-    return memcmp(stored->hash, attemptHash, HASH_SIZE) == 0;
+// 密码验证 - 直接比较明文
+BOOL VerifyPassword(const char* attempt, PasswordRecord* stored) {
+    return strcmp(attempt, stored->password) == 0;
 }
 
 // 文件存储操作 - 按ID存储
 BOOL SaveUserData(const char* id, PasswordRecord* record, int userType, const char* username) {
     char filename[MAX_PATH];
-    snprintf(filename, MAX_PATH, "%s.user", id);
+    snprintf(filename, MAX_PATH, "store\\users\\%s.user", id);
 
-    FILE* file = fopen(filename, "wb");
+    FILE* file = fopen(filename, "w"); // 修改为文本模式
     if (!file) return FALSE;
 
     // 扩展用户记录以包含ID、用户名和类型
@@ -81,64 +43,83 @@ BOOL SaveUserData(const char* id, PasswordRecord* record, int userType, const ch
     memcpy(&userRecord.password, record, sizeof(PasswordRecord));
     userRecord.userType = userType;
 
-    size_t written = fwrite(&userRecord, sizeof(UserRecord), 1, file);
+    // 以明文形式写入文件
+    fprintf(file, "%s\n%s\n%s\n%d\n", 
+            userRecord.id, 
+            userRecord.username, 
+            userRecord.password.password,
+            userRecord.userType);
+            
     fclose(file);
     
     // 创建用户名到ID的映射文件
     char mapFilename[MAX_PATH];
-    snprintf(mapFilename, MAX_PATH, "%s.map", username);
+    snprintf(mapFilename, MAX_PATH, "store\\users\\%s.map", username);
     
-    FILE* mapFile = fopen(mapFilename, "wb");
+    FILE* mapFile = fopen(mapFilename, "w");
     if (!mapFile) return FALSE;
     
-    size_t mapWritten = fwrite(id, sizeof(char), MAX_ID_LEN, mapFile);
+    fprintf(mapFile, "%s", id);
     fclose(mapFile);
     
-    return (written == 1 && mapWritten == MAX_ID_LEN);
+    return TRUE;
 }
 
 // 通过ID加载用户数据
 BOOL LoadUserData(const char* id, PasswordRecord* record, int* userType, char* username) {
     char filename[MAX_PATH];
-    snprintf(filename, MAX_PATH, "%s.user", id);
+    snprintf(filename, MAX_PATH, "store\\users\\%s.user", id);
 
-    FILE* file = fopen(filename, "rb");
+    FILE* file = fopen(filename, "r");
     if (!file) return FALSE;
 
-    UserRecord userRecord;
-    size_t read = fread(&userRecord, sizeof(UserRecord), 1, file);
+    char id_buf[MAX_ID_LEN];
+    char username_buf[MAX_USERNAME_LEN];
+    char password_buf[MAX_PASSWORD_LEN];
+    int userType_buf;
+
+    // 从文件读取各项数据
+    if (fscanf(file, "%s\n%s\n%s\n%d", 
+              id_buf, username_buf, password_buf, &userType_buf) != 4) {
+        fclose(file);
+        return FALSE;
+    }
+    
     fclose(file);
     
-    if (read == 1) {
-        memcpy(record, &userRecord.password, sizeof(PasswordRecord));
-        *userType = userRecord.userType;
-        if (username) {
-            strncpy(username, userRecord.username, MAX_USERNAME_LEN);
-        }
-        return TRUE;
+    // 填充返回值
+    strncpy(record->password, password_buf, MAX_PASSWORD_LEN);
+    *userType = userType_buf;
+    
+    if (username) {
+        strncpy(username, username_buf, MAX_USERNAME_LEN);
     }
-    return FALSE;
+    
+    return TRUE;
 }
 
 // 通过用户名获取ID
 BOOL GetUserByUsername(const char* username, char* id) {
     char mapFilename[MAX_PATH];
-    snprintf(mapFilename, MAX_PATH, "%s.map", username);
+    snprintf(mapFilename, MAX_PATH, "store\\users\\%s.map", username);
     
-    FILE* mapFile = fopen(mapFilename, "rb");
+    FILE* mapFile = fopen(mapFilename, "r");
     if (!mapFile) return FALSE;
     
-    size_t read = fread(id, sizeof(char), MAX_ID_LEN, mapFile);
-    fclose(mapFile);
+    if (fscanf(mapFile, "%s", id) != 1) {
+        fclose(mapFile);
+        return FALSE;
+    }
     
-    return (read == MAX_ID_LEN);
+    fclose(mapFile);
+    return TRUE;
 }
 
 // 用户注册
 void RegisterUser() {
     char username[MAX_USERNAME_LEN];
     char id[MAX_ID_LEN];
-    wchar_t password[MAX_PASSWORD_LEN];
+    char password[MAX_PASSWORD_LEN];
     PasswordRecord record;
     int userType = 35;  // 默认注册为学生
     int choice;
@@ -169,8 +150,8 @@ void RegisterUser() {
     }
 
     printf("密码: ");
-    fgetws(password, MAX_PASSWORD_LEN, stdin);
-    password[wcscspn(password, L"\n")] = 0;
+    fgets(password, MAX_PASSWORD_LEN, stdin);
+    password[strcspn(password, "\n")] = 0;
     
     printf("用户类型:\n");
     printf("1. 管理员\n");
@@ -192,7 +173,7 @@ void RegisterUser() {
         userType = 35;  // 学生权限
     }
 
-    if (HashPassword(password, &record)) {
+    if (SavePassword(password, &record)) {
         if (SaveUserData(id, &record, userType, username)) {
             printf("注册成功！\n");
         } else {
@@ -207,7 +188,7 @@ void RegisterUser() {
 int LoginUser() {
     char username[MAX_USERNAME_LEN];
     char id[MAX_ID_LEN];
-    wchar_t password[MAX_PASSWORD_LEN];
+    char password[MAX_PASSWORD_LEN];
     PasswordRecord record;
     int userType = -1;
 
@@ -230,8 +211,8 @@ int LoginUser() {
     }
 
     printf("密码: ");
-    fgetws(password, MAX_PASSWORD_LEN, stdin);
-    password[wcscspn(password, L"\n")] = 0;
+    fgets(password, MAX_PASSWORD_LEN, stdin);
+    password[strcspn(password, "\n")] = 0;
 
     if (VerifyPassword(password, &record)) {
         printf("登录成功！\n");
@@ -251,20 +232,35 @@ int LoginUser() {
     }
 }
 
-// 身份认证流程
+// 身份认证流程 - 改进输入处理
 int AuthenticationProcess() {
     int choice;
     int userType = -1;
 
+    // 确保用户目录存在
+    ensureDirectoryExists("store");
+    ensureDirectoryExists("store\\users");
+
     while (userType == -1) {
+        system("cls");
         printf("\n=== 身份验证系统 ===\n");
         printf("1. 登录\n");
         printf("2. 注册\n");
         printf("3. 以访客身份继续\n");  
         printf("4. 退出系统\n");
         printf("请选择: ");
-        scanf("%d", &choice);
-        getchar(); // 清除输入缓冲区中的换行符
+        
+        // 更安全的输入处理
+        if (scanf("%d", &choice) != 1) {
+            // 清除输入缓冲区
+            while (getchar() != '\n');
+            printf("输入无效，请重试！\n");
+            Sleep(1000); // 延迟以便用户看到错误消息
+            continue;
+        }
+        
+        // 清除输入缓冲区中的换行符
+        while (getchar() != '\n');
 
         switch (choice) {
         case 1:
@@ -274,110 +270,74 @@ int AuthenticationProcess() {
             RegisterUser();
             break;
         case 3:
-            userType = -1;
             printf("您正以访客身份访问系统，功能受限。\n");
+            // 设置默认访客用户信息
+            strcpy(currentUser.id, "guest");
+            strcpy(currentUser.username, "访客");
+            currentUser.userType = -1;
+            userType = -1;
+            Sleep(2000); // 给用户时间阅读信息
             return userType;
         case 4:
+            printf("正在退出系统...\n");
+            Sleep(1000);
             exit(0);
         default:
             printf("无效选项，请重试！\n");
+            Sleep(1000);
         }
     }
 
     return userType;
 }
 
-// 教师课程管理函数
+// 教师课程管理函数 - 简化实现，只关注文本文件存储
 BOOL AssignCourseToTeacher(const char* teacherId, const char* courseCode) {
-    // 加载教师数据
-    Teacher* teachers = NULL;
-    Course* courses = NULL;
-    Grade* grades = NULL;
-    char dataFile[] = "school_data.dat";
+    // 使用简单的文本文件记录关联
+    char filename[MAX_PATH];
+    snprintf(filename, MAX_PATH, "store\\teachers\\%s_courses.txt", teacherId);
     
-    // 反序列化学校数据
-    deserialize(&teachers, &courses, &grades, dataFile);
-    
-    // 查找教师
-    Teacher* teacher = NULL;
-    for (Teacher* t = teachers; t != NULL; t = t->next) {
-        if (strcmp(t->id, teacherId) == 0) {
-            teacher = t;
-            break;
+    // 检查课程是否已分配
+    FILE* checkFile = fopen(filename, "r");
+    if (checkFile) {
+        char line[20];
+        while (fgets(line, sizeof(line), checkFile)) {
+            line[strcspn(line, "\n")] = 0;
+            if (strcmp(line, courseCode) == 0) {
+                fclose(checkFile);
+                return TRUE; // 课程已分配
+            }
         }
+        fclose(checkFile);
     }
     
-    // 查找课程
-    Course* course = NULL;
-    for (Course* c = courses; c != NULL; c = c->next) {
-        if (strcmp(c->code, courseCode) == 0) {
-            course = c;
-            break;
-        }
-    }
+    // 添加新的课程分配
+    FILE* file = fopen(filename, "a");
+    if (!file) return FALSE;
     
-    if (!teacher || !course) {
-        // 释放内存
-        // TODO: 添加释放内存的函数调用
-        return FALSE;
-    }
-    
-    // 检查是否已分配
-    for (TeacherCourse* tc = teacher->courses; tc != NULL; tc = tc->next) {
-        if (strcmp(tc->course_code, courseCode) == 0) {
-            // 已分配，不需要重复分配
-            return TRUE;
-        }
-    }
-    
-    // 创建新的教师课程关联
-    TeacherCourse* newCourse = (TeacherCourse*)malloc(sizeof(TeacherCourse));
-    if (!newCourse) return FALSE;
-    
-    strncpy(newCourse->course_code, courseCode, sizeof(newCourse->course_code) - 1);
-    newCourse->course_code[sizeof(newCourse->course_code) - 1] = '\0';
-    newCourse->next = teacher->courses;
-    teacher->courses = newCourse;
-    
-    // 更新课程的教师指针
-    course->teacher = teacher;
-    
-    // 保存更新后的数据
-    serialize(teachers, courses, grades, dataFile);
+    fprintf(file, "%s\n", courseCode);
+    fclose(file);
     
     return TRUE;
 }
 
 // 检查教师是否被分配到某课程
 BOOL IsTeacherAssignedToCourse(const char* teacherId, const char* courseCode) {
-    // 加载教师数据
-    Teacher* teachers = NULL;
-    Course* courses = NULL;
-    Grade* grades = NULL;
-    char dataFile[] = "school_data.dat";
+    char filename[MAX_PATH];
+    snprintf(filename, MAX_PATH, "store\\teachers\\%s_courses.txt", teacherId);
     
-    // 反序列化学校数据
-    deserialize(&teachers, &courses, &grades, dataFile);
+    FILE* file = fopen(filename, "r");
+    if (!file) return FALSE;
     
-    // 查找教师
-    Teacher* teacher = NULL;
-    for (Teacher* t = teachers; t != NULL; t = t->next) {
-        if (strcmp(t->id, teacherId) == 0) {
-            teacher = t;
-            break;
-        }
-    }
-    
-    if (!teacher) {
-        return FALSE;
-    }
-    
-    // 检查是否已分配
-    for (TeacherCourse* tc = teacher->courses; tc != NULL; tc = tc->next) {
-        if (strcmp(tc->course_code, courseCode) == 0) {
+    char line[20];
+    while (fgets(line, sizeof(line), file)) {
+        line[strcspn(line, "\n")] = 0;
+        if (strcmp(line, courseCode) == 0) {
+            fclose(file);
             return TRUE;
         }
     }
     
+    fclose(file);
     return FALSE;
 }

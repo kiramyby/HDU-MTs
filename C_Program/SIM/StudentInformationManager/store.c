@@ -54,15 +54,37 @@ void serialize(Student* students, Course* courses, Grade* grades, const char* fi
 Student* loadStudents(FILE* fp) {
     Student* head = NULL;
     Student** current = &head;
+    
     while (1) {
         Student* node = (Student*)malloc(sizeof(Student));
-        if (fread(node->id, sizeof(char), 12, fp) != 12) break;
-        if (fread(node->name, sizeof(char), 20, fp) != 20) break;
+        if (!node) {
+            printf("内存分配失败!\n");
+            // 清理已分配的内存
+            Student* temp;
+            while (head) {
+                temp = head;
+                head = head->next;
+                free(temp);
+            }
+            return NULL;
+        }
+        
+        if (fread(node->id, sizeof(char), 12, fp) != 12) {
+            free(node);
+            break;
+        }
+        
+        if (fread(node->name, sizeof(char), 20, fp) != 20) {
+            free(node);
+            break;
+        }
+        
         node->grades = NULL;
         node->next = NULL;
         *current = node;
         current = &(node->next);
     }
+    
     return head;
 }
 
@@ -70,15 +92,38 @@ Student* loadStudents(FILE* fp) {
 Course* loadCourses(FILE* fp) {
     Course* head = NULL;
     Course** current = &head;
+    
     while (1) {
         Course* node = (Course*)malloc(sizeof(Course));
-        if (fread(node->code, sizeof(char), 10, fp) != 10) break;
-        if (fread(node->name, sizeof(char), 50, fp) != 50) break;
+        if (!node) {
+            printf("内存分配失败!\n");
+            // 清理已分配的内存
+            Course* temp;
+            while (head) {
+                temp = head;
+                head = head->next;
+                free(temp);
+            }
+            return NULL;
+        }
+        
+        if (fread(node->code, sizeof(char), 10, fp) != 10) {
+            free(node);
+            break;
+        }
+        
+        if (fread(node->name, sizeof(char), 50, fp) != 50) {
+            free(node);
+            break;
+        }
+        
         node->grades = NULL;
         node->next = NULL;
+        node->teacher = NULL;
         *current = node;
         current = &(node->next);
     }
+    
     return head;
 }
 
@@ -86,16 +131,42 @@ Course* loadCourses(FILE* fp) {
 Grade* loadGrades(FILE* fp) {
     Grade* head = NULL;
     Grade** current = &head;
+    
     while (1) {
         Grade* node = (Grade*)malloc(sizeof(Grade));
-        if (fread(node->student_id, sizeof(char), 12, fp) != 12) break;
-        if (fread(node->course_code, sizeof(char), 10, fp) != 10) break;
-        if (fread(&node->score, sizeof(float), 1, fp) != 1) break;
+        if (!node) {
+            printf("内存分配失败!\n");
+            // 清理已分配的内存
+            Grade* temp;
+            while (head) {
+                temp = head;
+                head = head->next_student;
+                free(temp);
+            }
+            return NULL;
+        }
+        
+        if (fread(node->student_id, sizeof(char), 12, fp) != 12) {
+            free(node);
+            break;
+        }
+        
+        if (fread(node->course_code, sizeof(char), 10, fp) != 10) {
+            free(node);
+            break;
+        }
+        
+        if (fread(&node->score, sizeof(float), 1, fp) != 1) {
+            free(node);
+            break;
+        }
+        
         node->next_student = NULL;
         node->next_course = NULL;
         *current = node;
         current = &(node->next_student);
     }
+    
     return head;
 }
 

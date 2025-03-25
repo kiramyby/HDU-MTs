@@ -13,10 +13,10 @@
 #define MAX_TEACHER_COURSES 10
 
 /* UI 相关常量 */
-#define LEFT_HEAD 30
-#define RIGHT_HEAD 110
-#define UP_HEAD 10
-#define DOWN_HEAD 110
+#define LEFT_HEAD 10
+#define UP_HEAD 2
+#define RIGHT_HEAD 150
+#define DOWN_HEAD 42
 
 /* 加密相关常量 */
 #define SALT_SIZE 32
@@ -73,11 +73,9 @@ struct Grade {
     struct Grade* next_course;  
 };
 
-// 密码记录结构体
+// 密码记录结构体 - 简化为明文存储
 typedef struct {
-    BYTE salt[SALT_SIZE];
-    BYTE hash[HASH_SIZE];
-    DWORD iterations;
+    char password[MAX_PASSWORD_LEN];  // 明文密码
 } PasswordRecord;
 
 // 比较函数类型

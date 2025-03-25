@@ -105,7 +105,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -130,16 +130,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="auth.c" />
     <ClCompile Include="check.c" />
-    <ClCompile Include="crypto.c" />
     <ClCompile Include="sim.c" />
     <ClCompile Include="sim_main.c" />
     <ClCompile Include="store.c" />
-    <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="auth.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sim.h" />
+    <ClInclude Include="sim_types.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="StudentInformationManager.rc" />
