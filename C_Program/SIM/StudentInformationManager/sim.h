@@ -70,4 +70,10 @@ BOOL HasAccessToCourse(int uid, const char* course_code);
 void DisplayRelevantCourses(int uid, Course* courses, int startY);
 void ShowPermissionDeniedMessage(int leftStart, const char* operation);
 
+/* 日志相关函数声明 */
+void LogSystemActivity(const char* action, const char* details);
+void WriteLogToFile(const char* logEntry);
+void ShowRecentLogEntries(int maxEntries);
+char* WriteLogFileName(void); // 添加获取日志文件名的函数
+
 #endif /* SIM_H */
