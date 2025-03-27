@@ -32,24 +32,6 @@ void saveGrades(Grade* head, FILE* fp) {
     }
 }
 
-// 主序列化函数
-void serialize(Student* students, Course* courses, Grade* grades, const char* filename) {
-    FILE* fp = fopen(filename, "wb");
-    if (!fp) {
-        perror("文件打开失败");
-        return;
-    }
-
-    // 写入数据
-    saveStudents(students, fp);
-    saveCourses(courses, fp);
-    saveGrades(grades, fp);
-
-    // 计算并写入校验和
-    writeChecksum(fp);
-    fclose(fp);
-}
-
 // 加载学生链表
 Student* loadStudents(FILE* fp) {
     Student* head = NULL;
@@ -168,47 +150,4 @@ Grade* loadGrades(FILE* fp) {
     }
     
     return head;
-}
-
-/* ================== 序列化相关函数 ================== */
-// 主反序列化函数
-void deserialize(Student** students, Course** courses, Grade** grades, const char* filename) {
-    FILE* fp = fopen(filename, "rb");
-    if (!fp) {
-        perror("文件打开失败");
-        return;
-    }
-
-    // 校验数据完整性
-    if (!verifyChecksum(fp)) {
-        printf("数据损坏！\n");
-        fclose(fp);
-        return;
-    }
-
-    // 重置文件指针并加载数据
-    fseek(fp, 0, SEEK_SET);
-    *students = loadStudents(fp);
-    *courses = loadCourses(fp);
-    *grades = loadGrades(fp);
-    fclose(fp);
-
-    // 关联成绩与课程、学生
-    Grade* current = *grades;
-    while (current != NULL) {
-        // 查找对应学生和课程
-        Student* stu = *students;
-        while (stu != NULL && strcmp(stu->id, current->student_id) != 0) stu = stu->next;
-        Course* cour = *courses;
-        while (cour != NULL && strcmp(cour->code, current->course_code) != 0) cour = cour->next;
-
-        // 更新指针
-        if (stu && cour) {
-            current->next_student = stu->grades;
-            stu->grades = current;
-            current->next_course = cour->grades;
-            cour->grades = current;
-        }
-        current = current->next_student;
-    }
 }

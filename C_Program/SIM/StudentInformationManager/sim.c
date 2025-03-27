@@ -1980,7 +1980,6 @@ void Delete(int uid) {
                             }
                             
                             // 释放内存
-                            // 注意：在实际应用中，还需要处理与该课程相关的所有成绩记录
                             free(current);
                             found = TRUE;
                             break;

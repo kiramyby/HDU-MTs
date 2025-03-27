@@ -7,7 +7,7 @@
 #include <time.h>
 #include <string.h>
 #include <tchar.h>
-#include <conio.h> // 添加对_getch()的支持
+#include <conio.h> 
 
 #include "sim_types.h"
 

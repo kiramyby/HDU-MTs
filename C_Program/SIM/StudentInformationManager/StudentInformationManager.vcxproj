@@ -131,7 +131,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="auth.c" />
-    <ClCompile Include="check.c" />
     <ClCompile Include="sim.c" />
     <ClCompile Include="sim_main.c" />
     <ClCompile Include="store.c" />
