@@ -1,0 +1,89 @@
+import java.util.Arrays;
+import java.util.Scanner;
+
+class Rectangle {
+    private final int width,length;
+    public Rectangle(int width, int length){
+        this.width = width;
+        this.length = length;
+    }
+
+    public int getPerimeter(){
+        return (width+length)*2;
+    }
+
+    public int getArea(){
+        return width*length;
+    }
+
+    @Override
+    public String toString() {
+        return "Rectangle{" +
+                "width=" + width +
+                ", length=" + length +
+                '}';
+    }
+}
+
+class Circle{
+    private final int radius;
+
+    public Circle(int radius){
+        this.radius = radius;
+    }
+
+    public int getPerimeter(){
+        return (int) (2*Math.PI*radius);
+    }
+
+    public int getArea(){
+        return (int) (Math.PI*radius*radius);
+    }
+
+    @Override
+    public String toString() {
+        return "Circle{" +
+                "radius=" + radius +
+                '}';
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Rectangle[] r = new Rectangle[2];
+        Circle[] c = new Circle[2];
+
+        Scanner scanner = new Scanner(System.in);
+
+        for (int i = 0; i < 2; i++) {
+            int width = 0, length = 0;
+            if (scanner.hasNextInt()) {
+                width = scanner.nextInt();
+            }
+            if (scanner.hasNextInt()) {
+                length = scanner.nextInt();
+            }
+            r[i] = new Rectangle(width, length);
+        }
+
+        for (int i = 0; i < 2; i++) {
+            int radius = 0;
+            if (scanner.hasNextInt()) {
+                radius = scanner.nextInt();
+            }
+            c[i] = new Circle(radius);
+        }
+        System.out.println(
+                r[0].getPerimeter()+r[1].getPerimeter()+c[0].getPerimeter()+c[1].getPerimeter()
+        );
+        System.out.println(
+                r[0].getArea()+r[1].getArea()+c[0].getArea()+c[1].getArea()
+        );
+        System.out.println(
+                Arrays.deepToString(r)
+        );
+        System.out.println(
+                Arrays.deepToString(c)
+        );
+    }
+}
