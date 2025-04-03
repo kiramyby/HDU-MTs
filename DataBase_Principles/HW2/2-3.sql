@@ -1,0 +1,10 @@
+ALTER TABLE Student ADD Nation VARCHAR(20);
+ALTER TABLE Student DROP COLUMN Nation;
+
+INSERT INTO Grade (Sno, Cno, Gmark) VALUES
+('2021110', '3', 80);
+UPDATE Grade SET Gmark = 70 WHERE Sno = '2021110';
+DELETE FROM Grade WHERE Sno = '2021110';
+
+CREATE INDEX IX_Class ON Student(Clno ASC);
+DROP INDEX IX_Class;
