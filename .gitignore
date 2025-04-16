@@ -12,6 +12,10 @@
 ipch/
 *.ipch
 
+# IDEA specific files
+.idea/
+*.iml
+
 # Build outputs
 [Dd]ebug/
 [Rr]elease/
