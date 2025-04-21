@@ -144,3 +144,13 @@ FROM Course c
 LEFT JOIN Grade g ON c.Cno = g.Cno
 GROUP BY c.Cno, c.Cname;
 
+-- EX 创建一个名为Class_grade的视图，用于反映每个班级的所有选修课的平均成绩，并对其进行更新操作
+CREATE VIEW Class_grade AS
+SELECT s.Clno, AVG(g.Gmark) AS avg_grade
+FROM Student s
+JOIN Grade g ON s.Sno = g.Sno
+GROUP BY s.Clno;
+-- 更新操作示例
+UPDATE Class_grade
+SET avg_grade = 85.0
+WHERE Clno = '20311';
