@@ -4,23 +4,28 @@ import yan.util.AreaCalculate;
 
 public class TriangleCalculate extends AreaCalculate {
     private double a, b, c;
-    private double area;
-    private String type = "Triangle";
+    private final String type = "Triangle";
 
     @Override
     public void setParameter() {
-        System.out.println("Setting triangle parameters...");
-        this.a = 3.0;
-        this.b = 4.0;
-        this.c = 5.0;
+        System.out.println("设置三角形的参数...");
+        System.out.print("请输入第一条边长: ");
+        this.a = input.nextDouble();
+        System.out.print("请输入第二条边长: ");
+        this.b = input.nextDouble();
+        System.out.print("请输入第三条边长: ");
+        this.c = input.nextDouble();
         
-        double p = (a + b + c) / 2;
-        this.area = Math.sqrt(p * (p - a) * (p - b) * (p - c));
+        if (checkInfo()) {
+            calculateArea();
+        } else {
+            System.out.println("三角形不合法，请重新设置参数");
+            setParameter();
+        }
     }
 
     @Override
     public void getArea() {
-        System.out.println("Calculating area of Triangle...");
         System.out.println("Area: " + this.area);
     }
 
@@ -29,5 +34,16 @@ public class TriangleCalculate extends AreaCalculate {
         System.out.println("Type: " + type);
         System.out.println("Sides: a=" + a + ", b=" + b + ", c=" + c);
         System.out.println("Area: " + area);
+    }
+    
+    @Override
+    protected boolean checkInfo() {
+        return (a + b > c) && (a + c > b) && (b + c > a);
+    }
+    
+    @Override
+    protected void calculateArea() {
+        double p = (a + b + c) / 2;
+        this.area = Math.sqrt(p * (p - a) * (p - b) * (p - c));
     }
 }

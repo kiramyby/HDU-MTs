@@ -4,13 +4,18 @@ import yan.util.AreaCalculate;
 
 public class CircleCalculate extends AreaCalculate {
     private double radius;
-    private double area;
-    private String type = "Circle";
+    private final String type = "Circle";
 
     @Override
     public void setParameter() {
-        this.radius = 5.0;
-        this.area = Math.PI * radius * radius;
+        System.out.print("请输入圆的半径: ");
+        this.radius = input.nextDouble();
+        if (checkInfo()) {
+            calculateArea();
+        } else {
+            System.out.println("半径必须大于0，请重新设置参数");
+            setParameter();
+        }
     }
 
     @Override
@@ -23,5 +28,15 @@ public class CircleCalculate extends AreaCalculate {
         System.out.println("Type: " + type);
         System.out.println("Radius: " + radius);
         System.out.println("Area: " + area);
+    }
+    
+    @Override
+    protected boolean checkInfo() {
+        return radius > 0;
+    }
+    
+    @Override
+    protected void calculateArea() {
+        this.area = Math.PI * radius * radius;
     }
 }
