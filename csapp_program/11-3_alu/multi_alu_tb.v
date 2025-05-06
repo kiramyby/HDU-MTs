@@ -1,21 +1,22 @@
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 
-module multi_alu_tb;
-
-    // Inputs
+module multi_alu_tb();
+    // 时钟和复位信号
     reg clk;
     reg clk_A;
     reg clk_B;
     reg clk_F;
     reg rst_n;
+    
+    // 输入信号
     reg [31:0] sw;
     
-    // Outputs
-    wire [3:0] FR;
-    wire [7:0] SEG;
-    wire [2:0] WHICH;
+    // 输出信号
+    wire [3:0] FR;  // 标志位 [ZF, SF, OF, CF]
+    wire [7:0] seg; // 七段数码管段选信号
+    wire [2:0] which; // 七段数码管位选信号
     
-    // Instantiate the multi_alu
+    // 实例化被测模块
     multi_alu uut (
         .clk(clk),
         .clk_A(clk_A),
@@ -24,180 +25,165 @@ module multi_alu_tb;
         .rst_n(rst_n),
         .sw(sw),
         .FR(FR),
-        .SEG(SEG),
-        .WHICH(WHICH)
+        .seg(seg),
+        .which(which)
     );
     
-    // Clock generation
+    // 时钟生成 - 50MHz
     initial begin
         clk = 0;
-        forever #5 clk = ~clk; // 100MHz clock
+        forever #10 clk = ~clk;  // 周期为20ns
     end
     
-    // Test procedure
+    // 测试过程
     initial begin
-        // Initialize inputs
+        // 初始化
         clk_A = 0;
         clk_B = 0;
         clk_F = 0;
         rst_n = 0;
-        sw = 0;
+        sw = 32'h0;
         
-        // Apply reset
-        #20;
+        // 复位释放
+        #100;
         rst_n = 1;
-        #10;
+        #50;
         
-        // Test Case 1: Addition (A + B)
-        // Load A with 10
-        sw = 32'h0000000A;
-        #5 clk_A = 1;
-        #5 clk_A = 0;
+        // 测试用例1: 加法操作 (ALU_OP = 0000)
+        // 加载A=5
+        sw = 32'h00000005;  // 高4位为操作码，低位为操作数
+        #10 clk_A = 1;
+        #10 clk_A = 0;
         
-        // Load B with 20
-        sw = 32'h00000014;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
+        // 加载B=3
+        sw = 32'h00000003;
+        #10 clk_B = 1;
+        #10 clk_B = 0;
         
-        // Set operation to ADD (0000)
-        sw = 32'h00000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
+        // 执行加法并存储结果
+        sw = 32'h00000000;  // 设置操作码为加法(0000)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;  // 等待结果稳定
         
-        // Result should be 30 (0x1E) and ZF=0, SF=0, OF=0, CF=0
-        #10;
-        $display("Test Case 1 - Addition: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Test Case 2: Subtraction (A - B)
-        // Load A with 30
-        sw = 32'h0000001E;
-        #5 clk_A = 1;
-        #5 clk_A = 0;
+        // 测试用例2: 减法操作 (ALU_OP = 1000)
+        // A保持为5，更改B为2
+        sw = 32'h00000002;
+        #10 clk_B = 1;
+        #10 clk_B = 0;
         
-        // Load B with 10
-        sw = 32'h0000000A;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
+        // 执行减法
+        sw = 32'h80000000;  // 设置操作码为减法(1000)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
         
-        // Set operation to SUB (1000)
-        sw = 32'h80000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
-        
-        // Result should be 20 (0x14) and ZF=0, SF=0, OF=0, CF=0
-        #10;
-        $display("Test Case 2 - Subtraction: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Test Case 3: Bitwise AND
-        // Load A with 0xF0F0
+        // 测试用例3: 逻辑与操作 (ALU_OP = 0111)
+        // A=0xF0F0, B=0xFF00
         sw = 32'h0000F0F0;
-        #5 clk_A = 1;
-        #5 clk_A = 0;
+        #10 clk_A = 1;
+        #10 clk_A = 0;
         
-        // Load B with 0x0FF0
-        sw = 32'h00000FF0;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
+        sw = 32'h0000FF00;
+        #10 clk_B = 1;
+        #10 clk_B = 0;
         
-        // Set operation to AND (0111)
-        sw = 32'h70000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
+        // 执行逻辑与
+        sw = 32'h70000000;  // 设置操作码为逻辑与(0111)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
         
-        // Result should be 0x00F0 and ZF=0, SF=0, OF=0, CF=0
-        #10;
-        $display("Test Case 3 - AND: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Test Case 4: Logical Shift Left
-        // Load A with 0x1
+        // 测试用例4: 逻辑或操作 (ALU_OP = 0110)
+        // A和B保持不变
+        
+        // 执行逻辑或
+        sw = 32'h60000000;  // 设置操作码为逻辑或(0110)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
+        
+        // 测试用例5: 异或操作 (ALU_OP = 0100)
+        // 执行异或
+        sw = 32'h40000000;  // 设置操作码为异或(0100)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
+        
+        // 测试用例6: 左移操作 (ALU_OP = 0001)
+        // A=0x1, B=4 (左移4位)
         sw = 32'h00000001;
-        #5 clk_A = 1;
-        #5 clk_A = 0;
+        #10 clk_A = 1;
+        #10 clk_A = 0;
         
-        // Load B with 4 (shift by 4)
         sw = 32'h00000004;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
+        #10 clk_B = 1;
+        #10 clk_B = 0;
         
-        // Set operation to SLL (0001)
-        sw = 32'h10000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
+        // 执行左移
+        sw = 32'h10000000;  // 设置操作码为左移(0001)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
         
-        // Result should be 0x10 and ZF=0, SF=0, OF=0, CF=0
-        #10;
-        $display("Test Case 4 - Shift Left: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Test Case 5: Set Less Than (signed)
-        // Load A with -10 (negative number)
-        sw = 32'hFFFFFFF6; // -10 in two's complement
-        #5 clk_A = 1;
-        #5 clk_A = 0;
-        
-        // Load B with 5 (positive number)
-        sw = 32'h00000005;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
-        
-        // Set operation to SLT (0010)
-        sw = 32'h20000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
-        
-        // Result should be 1 (since -10 < 5) and ZF=0, SF=0, OF=0, CF=0
-        #10;
-        $display("Test Case 5 - SLT: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Test Case 6: Set to Zero (test ZF flag)
-        // Load A with 25
-        sw = 32'h00000019;
-        #5 clk_A = 1;
-        #5 clk_A = 0;
-        
-        // Load B with 25
-        sw = 32'h00000019;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
-        
-        // Set operation to SUB (1000) - should result in zero
+        // 测试用例7: 逻辑右移 (ALU_OP = 0101)
+        // A=0x80000000, B=4 (右移4位)
         sw = 32'h80000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
+        #10 clk_A = 1;
+        #10 clk_A = 0;
         
-        // Result should be 0 and ZF=1, SF=0, OF=0, CF=0
-        #10;
-        $display("Test Case 6 - Zero Result: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Test Case 7: Negative Result (test SF flag)
-        // Load A with 10
-        sw = 32'h0000000A;
-        #5 clk_A = 1;
-        #5 clk_A = 0;
+        sw = 32'h00000004;
+        #10 clk_B = 1;
+        #10 clk_B = 0;
         
-        // Load B with 20
-        sw = 32'h00000014;
-        #5 clk_B = 1;
-        #5 clk_B = 0;
+        // 执行逻辑右移
+        sw = 32'h50000000;  // 设置操作码为逻辑右移(0101)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
         
-        // Set operation to SUB (1000) - should result in negative number
-        sw = 32'h80000000;
-        #5 clk_F = 1;
-        #5 clk_F = 0;
+        // 测试用例8: 算术右移 (ALU_OP = 1101)
+        // A保持为0x80000000, B=4
         
-        // Result should be -10 (0xFFFFFFF6) and ZF=0, SF=1, OF=0, CF=1
-        #10;
-        $display("Test Case 7 - Negative Result: A=%h, B=%h, F=%h, FR=%b", 
-                 uut.alu_a, uut.alu_b, uut.F, FR);
-                 
-        // Finish simulation
-        #20;
+        // 执行算术右移
+        sw = 32'hD0000000;  // 设置操作码为算术右移(1101)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
+        
+        // 测试用例9: 有符号比较 SLT (ALU_OP = 0010)
+        // A=-5, B=3
+        sw = 32'hFFFFFFFB;  // -5的二进制表示
+        #10 clk_A = 1;
+        #10 clk_A = 0;
+        
+        sw = 32'h00000003;
+        #10 clk_B = 1;
+        #10 clk_B = 0;
+        
+        // 执行有符号比较
+        sw = 32'h20000000;  // 设置操作码为SLT(0010)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
+        
+        // 测试用例10: 无符号比较 SLTU (ALU_OP = 0011)
+        // 执行无符号比较
+        sw = 32'h30000000;  // 设置操作码为SLTU(0011)
+        #10 clk_F = 1;
+        #10 clk_F = 0;
+        #50;
+        
+        // 仿真完成
+        #100;
         $finish;
     end
-
+    
+    // 监控关键信号
+    initial begin
+        $monitor("Time=%t, OP=%h, A=%h, B=%h, F=%h, ZF=%b, SF=%b, OF=%b, CF=%b", 
+                 $time, uut.alu_op, uut.alu_a, uut.alu_b, uut.F, 
+                 FR[3], FR[2], FR[1], FR[0]);
+    end
+    
 endmodule
