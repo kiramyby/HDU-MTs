@@ -1,24 +1,15 @@
 `timescale 1ns/1ps
 // 8位七段数码管扫描显示模块
-module display ( clk, rst_n, data, which, seg, count, digit);
+module display ( clk, data, which, seg, count, digit);
     input clk;
-    input rst_n;  // 添加复位信号
     input [31:0] data;
     output reg [2:0] which=0;
     output reg [7:0] seg;
 
     output reg [14:0] count =  0;
-    always @(posedge clk or negedge rst_n)
-        if (!rst_n)
-            count <= 15'b0;
-        else
-            count <= count + 1'b1;
+    always @(posedge clk) count <= count + 1'b1;
             
-    always @(negedge clk or negedge rst_n)
-        if (!rst_n)
-            which <= 3'b0;
-        else if (&count)
-            which <= which + 1'b1;
+    always @(negedge clk) if (&count) which <= which + 1'b1;
 
     output reg [3:0] digit;
     always @* case(which) 

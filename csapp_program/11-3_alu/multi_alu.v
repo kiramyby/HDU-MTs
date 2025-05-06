@@ -64,7 +64,6 @@ reg_b4 flag_reg (
 
 display display_inst (
     .clk(clk),
-    .rst_n(rst_n),
     .data(F),
     .which(which),
     .seg(seg)
