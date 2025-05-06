@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 // 8 位七段数码管扫描显示模块
-module Display(clk, data, which, seg,
+module display(clk, data, which, seg,
     count, digit); // 调试接口
     input clk; // 接入系统时钟
     input [32:1] data; // 32 位显示数据
@@ -42,4 +42,4 @@ module Display(clk, data, which, seg,
         4'hF: seg <= 8'b0111_0001;
     endcase
 
-endmodule // Display
+endmodule // display

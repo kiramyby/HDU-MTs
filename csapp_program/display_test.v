@@ -9,7 +9,7 @@ module Display_Test();
     wire [3:0] digit; // output for debug
 
     // Instantiate a display module
-    Display Display_Instance(.clk(clk), .data(data),
+    display Display_Instance(.clk(clk), .data(data),
         .which(which), .seg(seg),
         .count(count), .digit(digit));
 
