@@ -1,20 +1,21 @@
 `timescale 1ns / 1ps
+// ALU多功能测试模块仿真
 
 module multi_alu_tb();
     // 时钟和复位信号
-    reg clk;
-    reg clk_A;
-    reg clk_B;
-    reg clk_F;
-    reg rst_n;
+    reg clk = 0;        // 初始化时钟
+    reg clk_A = 0;
+    reg clk_B = 0;
+    reg clk_F = 0;
+    reg rst_n = 0;      // 初始为复位状态
     
     // 输入信号
     reg [31:0] sw;
     
     // 输出信号
-    wire [3:0] FR;  // 标志位 [ZF, SF, OF, CF]
-    wire [7:0] seg; // 七段数码管段选信号
-    wire [2:0] which; // 七段数码管位选信号
+    wire [3:0] FR;      // 标志位 [ZF, SF, OF, CF]
+    wire [7:0] seg;     // 七段数码管段选信号
+    wire [2:0] which;   // 七段数码管位选信号
     
     // 实例化被测模块
     multi_alu uut (
@@ -29,19 +30,12 @@ module multi_alu_tb();
         .which(which)
     );
     
-    // 时钟生成 - 50MHz
-    initial begin
-        clk = 0;
-        forever #10 clk = ~clk;  // 周期为20ns
-    end
+    // 时钟生成 - 使用与display_test.v类似的简洁方式
+    always #10 clk = ~clk;  // 周期为20ns，相当于50MHz
     
     // 测试过程
     initial begin
-        // 初始化
-        clk_A = 0;
-        clk_B = 0;
-        clk_F = 0;
-        rst_n = 0;
+        // 初始化信号
         sw = 32'h0;
         
         // 复位释放
@@ -51,7 +45,7 @@ module multi_alu_tb();
         
         // 测试用例1: 加法操作 (ALU_OP = 0000)
         // 加载A=5
-        sw = 32'h00000005;  // 高4位为操作码，低位为操作数
+        sw = 32'h00000005;  // 设置低位为操作数
         #10 clk_A = 1;
         #10 clk_A = 0;
         
@@ -179,11 +173,11 @@ module multi_alu_tb();
         $finish;
     end
     
-    // 监控关键信号
+    // 监控关键信号 - 增加更详细的信息输出
     initial begin
-        $monitor("Time=%t, OP=%h, A=%h, B=%h, F=%h, ZF=%b, SF=%b, OF=%b, CF=%b", 
+        $monitor("Time=%t, OP=%h, A=%h, B=%h, F=%h, ZF=%b, SF=%b, OF=%b, CF=%b, seg=%b, which=%b", 
                  $time, uut.alu_op, uut.alu_a, uut.alu_b, uut.F, 
-                 FR[3], FR[2], FR[1], FR[0]);
+                 FR[3], FR[2], FR[1], FR[0], seg, which);
     end
     
 endmodule
