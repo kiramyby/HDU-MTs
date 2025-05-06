@@ -1,6 +1,6 @@
 module multi_alu (
     clk, clk_A, clk_B, clk_F, rst_n,
-    sw, FR, SEG, WHICH
+    sw, FR, seg, which
 );
 
 input  wire        clk;
@@ -14,8 +14,8 @@ input  wire [31:0] sw;
 output wire [3:0]  FR;
 
 // Result 数码管显示
-output wire [7:0] SEG;
-output wire [2:0] WHICH;
+output wire [7:0] seg;
+output wire [2:0] which;
 
 wire [31:0] alu_a;
 wire [31:0] alu_b;
@@ -64,9 +64,10 @@ reg_b4 flag_reg (
 
 display display_inst (
     .clk(clk),
+    .rst_n(rst_n),
     .data(F),
-    .which(WHICH),
-    .seg(SEG)
+    .which(which),
+    .seg(seg)
 );
 
 endmodule
