@@ -1,9 +1,10 @@
 module reg_b32 (
-    input  wire        clk,
-    input  wire        rst_n,
-    input  wire [31:0] d,
-    output reg  [31:0] q
+    clk, rst_n, d, q
 );
+input         clk;
+input         rst_n;
+input  [31:0] d;
+output reg  [31:0] q;
 
 always @ (negedge rst_n or posedge clk)
 begin

@@ -3,14 +3,14 @@ module alu (
     ZF, CF, OF, SF
 );
 
-input  wire [3:0]  ALU_OP;      
-input  wire [31:0] ALU_A;      
-input  wire [31:0] ALU_B;       
+input  [3:0]  ALU_OP;      
+input  [31:0] ALU_A;      
+input  [31:0] ALU_B;       
 output reg  [31:0] ALU_F;
-output wire        ZF;           // 零标志
-output wire        CF;           // 进位标志
-output wire        OF;           // 溢出标志
-output wire        SF;           // 符号标志
+output        ZF;           // 零标志
+output        CF;           // 进位标志
+output        OF;           // 溢出标志
+output        SF;           // 符号标志
 
 reg C32 = 1'b0;
 
