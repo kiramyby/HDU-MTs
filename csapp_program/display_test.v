@@ -4,7 +4,7 @@ module display_test();
     reg clk = 0;
     reg[31:0] data;
     wire[2:0] which;
-    wire[7:0] seg;、
+    wire[7:0] seg;
     wire[14:0] count;
     wire[3:0] digit;
 
