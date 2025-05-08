@@ -140,11 +140,11 @@ DO $$
 DECLARE
     has_students INTEGER;
 BEGIN
-    CALL check_class_has_students('20311', has_students);
-    RAISE NOTICE '班级20311是否有学生(1=有,0=没有): %', has_students;
+    CALL check_class_has_students('CS001', has_students);
+    RAISE NOTICE '班级CS001是否有学生(1=有,0=没有): %', has_students;
     
-    CALL check_class_has_students('20999', has_students); -- 不存在的班级
-    RAISE NOTICE '班级20999是否有学生(1=有,0=没有): %', has_students;
+    CALL check_class_has_students('CS111', has_students); -- 不存在的班级
+    RAISE NOTICE '班级CS111是否有学生(1=有,0=没有): %', has_students;
 END $$;
 
 -- 测试19题存储过程：获取学生信息
@@ -153,17 +153,17 @@ DECLARE
     student_name VARCHAR(20);
     student_speciality VARCHAR(20);
 BEGIN
-    CALL get_student_info('2020101', student_name, student_speciality);
+    CALL get_student_info('2202001', student_name, student_speciality);
     RAISE NOTICE '学生姓名: %, 专业: %', student_name, student_speciality;
 END $$;
 
 -- 测试20题函数：查询学生成绩
-SELECT * FROM get_student_grades_func('2020101');
+SELECT * FROM get_student_grades_func('2202001');
 
 -- 测试20题函数：判断班级是否有学生
-SELECT check_class_has_students_func('20311') AS has_students;
-SELECT check_class_has_students_func('20999') AS has_students; -- 不存在的班级
+SELECT check_class_has_students_func('CS001') AS has_students;
+SELECT check_class_has_students_func('CS111') AS has_students; -- 不存在的班级
 
 -- 测试20题函数：获取学生信息
-SELECT * FROM get_student_info_func('2020101');
+SELECT * FROM get_student_info_func('2202001');
 
