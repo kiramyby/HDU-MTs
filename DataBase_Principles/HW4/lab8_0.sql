@@ -3,7 +3,7 @@
 CREATE TABLE Student (
     Sno CHAR(7) PRIMARY KEY,
     Sname VARCHAR(20) NOT NULL,
-    Ssex CHAR(2) NOT NULL DEFAULT '男', -- 新增约束，默认值为男
+    Ssex CHAR(2) NOT NULL DEFAULT '男',
     Sbirth DATE,
     Clno CHAR(5) NOT NULL
 );

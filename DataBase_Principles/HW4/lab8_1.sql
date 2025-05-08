@@ -17,28 +17,26 @@
 -- DROP FUNCTION IF EXISTS check_class_size();
 
 -- 12. 当向Student表中插入或删除记录时，修改Class表中相应班级的人数
-CREATE OR REPLACE FUNCTION update_class_number() RETURNS TRIGGER AS 
-BEGIN
-    IF TG_OP = 'INSERT' THEN
-        -- 插入学生时，增加对应班级的人数
-        UPDATE Class SET Number = Number + 1 
-        WHERE Clno = NEW.Clno;
-        RETURN NEW;
-    ELSIF TG_OP = 'DELETE' THEN
-        -- 删除学生时，减少对应班级的人数
-        UPDATE Class SET Number = Number - 1 
-        WHERE Clno = OLD.Clno;
-        RETURN OLD;
-    ELSIF TG_OP = 'UPDATE' AND OLD.Clno <> NEW.Clno THEN
-        -- 如果学生转班，减少旧班级人数，增加新班级人数
-        UPDATE Class SET Number = Number - 1 
-        WHERE Clno = OLD.Clno;
-        UPDATE Class SET Number = Number + 1 
-        WHERE Clno = NEW.Clno;
-        RETURN NEW;
-    END IF;
-    RETURN NULL;
-END;
+CREATE OR REPLACE FUNCTION update_class_number() RETURNS TRIGGER AS $$
+    BEGIN
+        IF TG_OP = 'INSERT' THEN
+            UPDATE Class SET Number = Number + 1 
+            WHERE Clno = NEW.Clno;
+            RETURN NEW;
+        ELSIF TG_OP = 'DELETE' THEN
+            UPDATE Class SET Number = Number - 1 
+            WHERE Clno = OLD.Clno;
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' AND OLD.Clno <> NEW.Clno THEN
+            UPDATE Class SET Number = Number - 1 
+            WHERE Clno = OLD.Clno;
+            UPDATE Class SET Number = Number + 1 
+            WHERE Clno = NEW.Clno;
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_class_number_trig
 AFTER INSERT OR DELETE OR UPDATE OF Clno ON Student
@@ -46,7 +44,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE update_class_number();
 
 -- 13. 当更新班长学号时，检查新输入的学号是否为同一班级的学生学号
-CREATE OR REPLACE FUNCTION check_monitor() RETURNS TRIGGER AS 
+CREATE OR REPLACE FUNCTION check_monitor() RETURNS TRIGGER AS $$
 DECLARE
     student_clno CHAR(5);
 BEGIN
@@ -63,7 +61,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER check_monitor_trig
 BEFORE UPDATE OF Monitor ON Class
@@ -80,12 +78,11 @@ LEFT JOIN Course c ON g.Cno = c.Cno
 GROUP BY s.Sno, s.Sname;
 
 -- 创建触发器函数，用于更新学分视图
-CREATE OR REPLACE FUNCTION update_credit() RETURNS TRIGGER AS 
+CREATE OR REPLACE FUNCTION update_credit() RETURNS TRIGGER AS $$
 BEGIN
-    -- 触发器只需要刷新视图即可，因为视图中已经包含了学分计算逻辑
-    -- 实际上PostgreSQL视图会自动更新，但为了满足题目要求，仍然创建触发器
     RETURN NEW;
 END;
+$$ LANGUAGE plpgsql;
 
 
 -- 创建触发器，监听Grade表的变化
@@ -95,7 +92,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE update_credit();
 
 -- 15. 检查班级人数是否超过40人
-CREATE OR REPLACE FUNCTION check_class_size() RETURNS TRIGGER AS 
+CREATE OR REPLACE FUNCTION check_class_size() RETURNS TRIGGER AS $$
 DECLARE
     current_number INTEGER;
 BEGIN
@@ -105,13 +102,14 @@ BEGIN
     -- 如果是插入新学生或者学生转班
     IF (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.Clno <> NEW.Clno)) THEN
         -- 检查加入该学生后班级人数是否超过40
-        IF current_number >= 40 THEN
+        IF current_number > 40 THEN
             RAISE EXCEPTION '班级 % 人数已达到40人上限，无法添加新学生', NEW.Clno;
         END IF;
     END IF;
     
     RETURN NEW;
 END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER check_class_size_trig
 BEFORE INSERT OR UPDATE OF Clno ON Student
@@ -176,7 +174,7 @@ SELECT Clno, Number FROM Class ORDER BY Clno;
 UPDATE Class SET Monitor = '2201002' WHERE Clno = 'CS001';
 SELECT Clno, Monitor FROM Class WHERE Clno = 'CS001';
 -- 尝试将非本班级的学生设为班长(应该失败)
--- UPDATE Class SET Monitor = '2202001' WHERE Clno = 'CS001';
+UPDATE Class SET Monitor = '2202001' WHERE Clno = 'CS001';
 
 -- 测试3: 验证触发器14 - 学分视图
 SELECT * FROM StudentCreditView ORDER BY Sno;

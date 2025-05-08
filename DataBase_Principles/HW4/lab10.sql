@@ -12,13 +12,19 @@
 CREATE OR REPLACE PROCEDURE get_student_grades(IN student_id CHAR(7))
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    temp_record RECORD;
 BEGIN
-    -- 查询该学生所有选修课的课程名和成绩
-    SELECT c.Cno, c.Cname, g.Gmark
-    FROM Grade g
-    JOIN Course c ON g.Cno = c.Cno
-    WHERE g.Sno = student_id
-    ORDER BY c.Cno;
+    FOR temp_record IN 
+        SELECT c.Cno, c.Cname, g.Gmark
+        FROM Grade g
+        JOIN Course c ON g.Cno = c.Cno
+        WHERE g.Sno = student_id
+        ORDER BY c.Cno
+    LOOP
+        RAISE NOTICE '课程号: %, 课程名: %, 成绩: %', 
+            temp_record.Cno, temp_record.Cname, temp_record.Gmark;
+    END LOOP;
 END;
 $$;
 
@@ -50,14 +56,14 @@ $$;
 CREATE OR REPLACE PROCEDURE get_student_info(
     IN student_id CHAR(7),
     OUT student_name VARCHAR(20),
-    OUT speciality VARCHAR(20)
+    OUT student_speciality VARCHAR(20)
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
     -- 查询学生姓名和专业
     SELECT s.Sname, c.Speciality
-    INTO student_name, speciality
+    INTO student_name, student_speciality
     FROM Student s
     JOIN Class c ON s.Clno = c.Clno
     WHERE s.Sno = student_id;
@@ -127,8 +133,7 @@ $$;
 -- 测试存储过程和函数
 
 -- 测试17题存储过程：查询学生成绩
--- 对学号为2020101的学生执行存储过程
-CALL get_student_grades('2020101');
+CALL get_student_grades('2202001');
 
 -- 测试18题存储过程：判断班级是否有学生
 DO $$
