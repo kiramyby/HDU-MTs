@@ -26,15 +26,14 @@ module multi_alu_tb();
         .which(which)
     );
     
-    // 时钟生成 - 使用与display_test.v类似的简洁方式
-    always #0.01 clk = ~clk;  // 周期为20ns，相当于50MHz
+    // 时钟生成
+    always #0.01 clk = ~clk; 
     
     // 测试过程
     initial begin
         // 初始化信号
         sw = 32'h0;
-        
-        // 复位释放
+        rst_n = 0;
         #100;
         rst_n = 1;
         // 加载A=5
@@ -46,30 +45,30 @@ module multi_alu_tb();
         sw = 32'h00000003;
         #10 clk_B = 1;
         #10 clk_B = 0;
-        
-        
+
+        // 执行加法并存储结果
         sw = 32'h00000000; 
         #10 clk_F = 1;
         #10 clk_F = 0;
-        #500;
+        #600;  // 等待数码管结果显示
+        
         // 复位释放
-        #100;
-        rst_n = 1;
+        rst_n = 0;
+        #10 rst_n = 1;
+
         // 加载A=5
         sw = 32'h00000001;  // 设置低位为操作数
         #10 clk_A = 1;
         #10 clk_A = 0;
-        
         // 加载B=3
         sw = 32'h00000000;
         #10 clk_B = 1;
         #10 clk_B = 0;
-        
-        
+        // 执行异或并存储结果
         sw = 32'h00000004; 
         #10 clk_F = 1;
         #10 clk_F = 0;
-        #500;
+        #500;  // 等待数码管结果显示
                   
         $finish;
     end
