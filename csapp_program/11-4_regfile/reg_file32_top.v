@@ -1,13 +1,18 @@
 module reg_file32_top (
-    clk, Reg_Write, clk_RR, clk_F, W_Addr, ALU_OP,
-    R_Addr_A, R_Addr_B ,FR , seg, which, rst_n
+    clk, Reg_Write, clk_RR, clk_F, clk_WB , W_Addr, ALU_OP,
+    R_Addr_A, R_Addr_B ,FR , seg, which, rst_n,
+    cus_enable, cus
 );
 
 input         clk;
 input         Reg_Write;
 input         clk_F;
+input         clk_WB;
 input         clk_RR;
 input         rst_n;
+input         cus_enable;
+input  [3:0]  cus;
+input  [3:0]  ALU_OP;
 input  [4:0]  W_Addr;
 input  [4:0]  R_Addr_A;
 input  [4:0]  R_Addr_B;
@@ -30,6 +35,13 @@ wire [31:0] alu_f;
 wire [3:0]  alu_fr;
 
 wire [31:0] F;
+reg [31:0] F_;
+
+always @(*) begin 
+    if ( cus_enable ) begin
+         F_[3:0] = cus;
+    end
+end
 
 // 寄存器堆， 用于ALU数据输入
 reg_file32 reg_file32_inst (
@@ -37,10 +49,10 @@ reg_file32 reg_file32_inst (
     .R_Addr_A(R_Addr_A),
     .R_Addr_B(R_Addr_B),
     .W_Addr(W_Addr),
-    .W_Data(F),
+    .W_Data(F_),
     .R_Data_A(reg_a),
     .R_Data_B(reg_b),
-    .clk_Regs(clk_RR),
+    .clk_Regs(clk_WB),
     .rst_n(rst_n)
 );
 

@@ -6,13 +6,13 @@ module reg_file32 (
     input [4:0] R_Addr_A, R_Addr_B, W_Addr;
     input Reg_Write, clk_Regs, rst_n;
 
-    output [31:0] R_Data_A, R_Data_B;
+    output reg [31:0] R_Data_A, R_Data_B;
 
-    reg[31:0] reg_file[0:31];
+    reg [31:0] reg_file[0:31];
+    integer  i;
 
     always @(posedge clk_Regs or negedge rst_n) begin
         if (!rst_n) begin
-            integer i;
             for (i = 0; i < 32; i = i + 1) begin
                 reg_file[i] <= 32'b0;
             end
@@ -22,8 +22,8 @@ module reg_file32 (
     end
 
     always @(*) begin
-        assign R_Data_A = (R_Addr_A == 5'b00000) ? 32'b0 : reg_file[R_Addr_A]; 
-        assign R_Data_B = (R_Addr_B == 5'b00000) ? 32'b0 : reg_file[R_Addr_B];
+        R_Data_A = (R_Addr_A == 5'b00000) ? 32'b0 : reg_file[R_Addr_A]; 
+        R_Data_B = (R_Addr_B == 5'b00000) ? 32'b0 : reg_file[R_Addr_B];
     end
 
 endmodule
