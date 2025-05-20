@@ -40,6 +40,10 @@ reg [31:0] F_;
 always @(*) begin 
     if ( cus_enable ) begin
          F_[3:0] = cus;
+         F_[31:4] = F[31:4];
+    end
+    else begin 
+        F_ =  F;
     end
 end
 

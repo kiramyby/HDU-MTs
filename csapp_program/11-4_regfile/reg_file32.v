@@ -14,10 +14,10 @@ module reg_file32 (
     always @(posedge clk_Regs or negedge rst_n) begin
         if (!rst_n) begin
             for (i = 0; i < 32; i = i + 1) begin
-                reg_file[i] <= 32'b0;
+                reg_file[i] = 32'b0;
             end
         end else if (Reg_Write && W_Addr != 5'b00000) begin  // 
-            reg_file[W_Addr] <= W_Data;
+            reg_file[W_Addr] = W_Data;
         end
     end
 
@@ -25,5 +25,5 @@ module reg_file32 (
         R_Data_A = (R_Addr_A == 5'b00000) ? 32'b0 : reg_file[R_Addr_A]; 
         R_Data_B = (R_Addr_B == 5'b00000) ? 32'b0 : reg_file[R_Addr_B];
     end
-
+    
 endmodule

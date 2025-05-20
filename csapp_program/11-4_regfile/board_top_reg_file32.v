@@ -5,7 +5,7 @@ module board_top__reg_file32(
 );
 
 input            clk;
-input   [1:3]    swb;
+input   [1:4]    swb;
 input   [1:32]   sw;
 output  [1:4]    led;
 output  [7:0]    seg;
@@ -27,7 +27,7 @@ reg_file32_top reg_file32_top_inst (
     .FR(led),
     .seg(seg),
     .which(which),
-    .cus_enable(sw_[29]),
+    .cus_enable(swb[4]),
     .Reg_Write(sw_[30]),
     .rst_n(sw_[31])
 );
