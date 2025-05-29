@@ -46,7 +46,7 @@ CREATE TABLE Employee (
     CONSTRAINT chk_emp_no CHECK (empNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT chk_emp_status CHECK (empStatus IN ('在职', '离职', '休假')),
     CONSTRAINT chk_duty_status CHECK (empDutyStatus IN ('在岗', '离岗', '出差'))
-)
+);
 
 -- 表二：人事管理员表（PersonnelAdministrator）
 CREATE TABLE PersonnelAdministrator (
@@ -54,7 +54,7 @@ CREATE TABLE PersonnelAdministrator (
     
     CONSTRAINT chk_pa_no CHECK (paNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT fk_pa_emp FOREIGN KEY (paNo) REFERENCES Employee(empNo) ON DELETE CASCADE
-)
+);
 
 -- 表三：人员管理（Manage）
 CREATE TABLE Manage (
@@ -64,7 +64,7 @@ CREATE TABLE Manage (
     PRIMARY KEY (paNo, empNo),
     CONSTRAINT fk_manage_pa FOREIGN KEY (paNo) REFERENCES PersonnelAdministrator(paNo) ON DELETE CASCADE,
     CONSTRAINT fk_manage_emp FOREIGN KEY (empNo) REFERENCES Employee(empNo) ON DELETE CASCADE
-)
+);
 
 -- 表四：科室表（Unit）
 CREATE TABLE Unit (
@@ -74,7 +74,7 @@ CREATE TABLE Unit (
     unPosition VARCHAR(50),
     
     CONSTRAINT chk_unit_no CHECK (unNo REGEXP '^[0-9]{5}$')
-)
+);
 
 -- 表八：检验仓库表（Warehouse）- 需要先创建，因为有外键依赖
 CREATE TABLE Warehouse (
@@ -84,7 +84,7 @@ CREATE TABLE Warehouse (
     
     CONSTRAINT chk_wh_no CHECK (whNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT chk_wh_capacity CHECK (whCapacity >= 0)
-)
+);
 
 -- 表五：检验科室表（Laboratory）
 CREATE TABLE Laboratory (
@@ -94,7 +94,7 @@ CREATE TABLE Laboratory (
     CONSTRAINT chk_lab_no CHECK (laNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT fk_lab_unit FOREIGN KEY (laNo) REFERENCES Unit(unNo) ON DELETE CASCADE,
     CONSTRAINT fk_lab_warehouse FOREIGN KEY (lwNo) REFERENCES Warehouse(whNo) ON DELETE SET NULL
-)
+);
 
 -- 表六：检验医生表（MedicalTechnologist）
 CREATE TABLE MedicalTechnologist (
@@ -103,7 +103,7 @@ CREATE TABLE MedicalTechnologist (
     
     CONSTRAINT fk_mt_emp FOREIGN KEY (mtNo) REFERENCES Employee(empNo) ON DELETE CASCADE,
     CONSTRAINT fk_mt_lab FOREIGN KEY (laNo) REFERENCES Laboratory(laNo) ON DELETE SET NULL
-)
+);
 
 -- 表七：检验仓库管理（WarehouseManagement）
 CREATE TABLE WarehouseManagement (
@@ -113,7 +113,7 @@ CREATE TABLE WarehouseManagement (
     PRIMARY KEY (wmNo, mtNo),
     CONSTRAINT fk_wm_warehouse FOREIGN KEY (wmNo) REFERENCES Warehouse(whNo) ON DELETE CASCADE,
     CONSTRAINT fk_wm_mt FOREIGN KEY (mtNo) REFERENCES MedicalTechnologist(mtNo) ON DELETE CASCADE
-)
+);
 
 -- 表九：检验器材表（InspectionEquipment）
 CREATE TABLE InspectionEquipment (
@@ -125,14 +125,14 @@ CREATE TABLE InspectionEquipment (
     CONSTRAINT chk_ie_no CHECK (ieNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT chk_ie_number CHECK (ieNumber >= 0),
     CONSTRAINT fk_ie_warehouse FOREIGN KEY (wmNo) REFERENCES Warehouse(whNo) ON DELETE SET NULL
-)
+);
 
 -- 表十一：门诊科室表（OutPatientDepartment）
 CREATE TABLE OutPatientDepartment (
     opNo CHAR(5) PRIMARY KEY,
     
     CONSTRAINT fk_op_unit FOREIGN KEY (opNo) REFERENCES Unit(unNo) ON DELETE CASCADE
-)
+);
 
 -- 表十二：门诊医生表（OutPatientPhysician）
 CREATE TABLE OutPatientPhysician (
@@ -141,7 +141,7 @@ CREATE TABLE OutPatientPhysician (
     
     CONSTRAINT fk_opp_emp FOREIGN KEY (oppNo) REFERENCES Employee(empNo) ON DELETE CASCADE,
     CONSTRAINT fk_opp_op FOREIGN KEY (opNo) REFERENCES OutPatientDepartment(opNo) ON DELETE SET NULL
-)
+);
 
 -- 表十三：病人表（Patient）
 CREATE TABLE Patient (
@@ -155,7 +155,7 @@ CREATE TABLE Patient (
     CONSTRAINT chk_p_no CHECK (pNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT chk_p_id CHECK (pID REGEXP '^[0-9]{17}[0-9X]$'),
     CONSTRAINT chk_p_phone CHECK (pTelephone REGEXP '^[0-9]{11}$')
-)
+);
 
 -- 表十四：就诊记录表（MedicalRecord）
 CREATE TABLE MedicalRecord (
@@ -168,7 +168,7 @@ CREATE TABLE MedicalRecord (
     CONSTRAINT chk_mr_no CHECK (mrNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT fk_mr_patient FOREIGN KEY (pNo) REFERENCES Patient(pNo) ON DELETE CASCADE,
     CONSTRAINT fk_mr_physician FOREIGN KEY (oppNo) REFERENCES OutPatientPhysician(oppNo) ON DELETE SET NULL
-)
+);
 
 -- 表十：检验记录表（InspectionRecord）
 CREATE TABLE InspectionRecord (
@@ -181,14 +181,14 @@ CREATE TABLE InspectionRecord (
     CONSTRAINT chk_ir_no CHECK (irNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT fk_ir_mt FOREIGN KEY (mtNo) REFERENCES MedicalTechnologist(mtNo) ON DELETE SET NULL,
     CONSTRAINT fk_ir_mr FOREIGN KEY (mrNo) REFERENCES MedicalRecord(mrNo) ON DELETE CASCADE
-)
+);
 
 -- 表十七：药房医师表（Chemist）
 CREATE TABLE Chemist (
     cNo CHAR(5) PRIMARY KEY,
     
     CONSTRAINT fk_chemist_emp FOREIGN KEY (cNo) REFERENCES Employee(empNo) ON DELETE CASCADE
-)
+);
 
 -- 表十八：取药记录表（MedicationPickupRecord）
 CREATE TABLE MedicationPickupRecord (
@@ -200,7 +200,7 @@ CREATE TABLE MedicationPickupRecord (
     CONSTRAINT chk_mpr_no CHECK (mprNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT fk_mpr_mr FOREIGN KEY (mrNo) REFERENCES MedicalRecord(mrNo) ON DELETE CASCADE,
     CONSTRAINT fk_mpr_chemist FOREIGN KEY (cNo) REFERENCES Chemist(cNo) ON DELETE SET NULL
-)
+);
 
 -- 表十五：病历表（CaseHistory）
 CREATE TABLE CaseHistory (
@@ -214,7 +214,7 @@ CREATE TABLE CaseHistory (
     CONSTRAINT fk_ch_ir FOREIGN KEY (irNo) REFERENCES InspectionRecord(irNo) ON DELETE SET NULL,
     CONSTRAINT fk_ch_mr FOREIGN KEY (mrNo) REFERENCES MedicalRecord(mrNo) ON DELETE CASCADE,
     CONSTRAINT fk_ch_mpr FOREIGN KEY (mprNo) REFERENCES MedicationPickupRecord(mprNo) ON DELETE SET NULL
-)
+);
 
 -- 表十六：账单表（Billing）
 CREATE TABLE Billing (
@@ -228,7 +228,7 @@ CREATE TABLE Billing (
     CONSTRAINT chk_bi_pay CHECK (biPay >= 0),
     CONSTRAINT chk_pay_method CHECK (biPayMethod IN ('现金', '银行卡', '支付宝', '微信', '医保')),
     CONSTRAINT fk_billing_ch FOREIGN KEY (chNo) REFERENCES CaseHistory(chNo) ON DELETE CASCADE
-)
+);
 
 -- 表十九：药房表（DrugStore）
 CREATE TABLE DrugStore (
@@ -238,7 +238,7 @@ CREATE TABLE DrugStore (
     
     CONSTRAINT chk_ds_no CHECK (dsNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT chk_ds_capacity CHECK (dsCapacity >= 0)
-)
+);
 
 -- 表二十：药房管理（PharmacyManage）
 CREATE TABLE PharmacyManage (
@@ -248,7 +248,7 @@ CREATE TABLE PharmacyManage (
     PRIMARY KEY (cNo, dsNo),
     CONSTRAINT fk_pm_chemist FOREIGN KEY (cNo) REFERENCES Chemist(cNo) ON DELETE CASCADE,
     CONSTRAINT fk_pm_drugstore FOREIGN KEY (dsNo) REFERENCES DrugStore(dsNo) ON DELETE CASCADE
-)
+);
 
 -- 表二十一：药品表（Medicine）
 CREATE TABLE Medicine (
@@ -260,7 +260,7 @@ CREATE TABLE Medicine (
     CONSTRAINT chk_me_no CHECK (meNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT chk_me_num CHECK (meNum >= 0),
     CONSTRAINT fk_medicine_ds FOREIGN KEY (dsNo) REFERENCES DrugStore(dsNo) ON DELETE SET NULL
-)
+);
 
 -- 表二十二：处方记录表（PrescriptionRecord）
 CREATE TABLE PrescriptionRecord (
@@ -273,7 +273,7 @@ CREATE TABLE PrescriptionRecord (
     CONSTRAINT chk_pr_no CHECK (prNo REGEXP '^[0-9]{5}$'),
     CONSTRAINT fk_pr_mpr FOREIGN KEY (mprNo) REFERENCES MedicationPickupRecord(mprNo) ON DELETE CASCADE,
     CONSTRAINT fk_pr_medicine FOREIGN KEY (meNo) REFERENCES Medicine(meNo) ON DELETE CASCADE
-)
+);
 
 -- 创建索引（基于设计文档）
 CREATE INDEX idx_medicalrecord_pno ON MedicalRecord(pNo);
@@ -464,7 +464,7 @@ CREATE PROCEDURE RegisterPatientVisit(
     IN p_oppNo CHAR(5),
     IN p_mrContent TEXT,
     OUT p_mrNo CHAR(5)
-)
+);
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -497,7 +497,7 @@ CREATE PROCEDURE ProcessInspection(
     IN p_mtNo CHAR(5),
     IN p_irResult TEXT,
     OUT p_irNo CHAR(5)
-)
+);
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -522,7 +522,7 @@ END //
 CREATE PROCEDURE DispenseMedicine(
     IN p_meNo CHAR(5),
     IN p_quantity INT
-)
+);
 BEGIN
     DECLARE current_stock INT;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -552,7 +552,7 @@ END //
 CREATE PROCEDURE GenerateMonthlyFinancialReport(
     IN p_year INT,
     IN p_month INT
-)
+);
 BEGIN
     SELECT 
         DATE_FORMAT(biPayTime, '%Y-%m-%d') AS payDate,
@@ -571,7 +571,7 @@ END //
 CREATE PROCEDURE BatchUpdateMedicineStock(
     IN p_dsNo CHAR(5),
     IN p_threshold INT
-)
+);
 BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE v_meNo CHAR(5);

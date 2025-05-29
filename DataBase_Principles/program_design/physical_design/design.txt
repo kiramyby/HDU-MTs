@@ -1,0 +1,376 @@
+6物理设计
+表一 员工表（Employee）
+属性中文名称	编码	数据类型	约束说明
+员工工号	empNo	5位数字字符串	Key
+姓名	empName	10位字符串	Not Null
+在职状态	empStatus	5位变长字符串	
+在岗状态	empDutyStatus	5变长位字符串	
+入职年份	empEntryYear	日期型	
+职级	empJobPosition	4位字符串	
+个人简介	empProfile	最大变长字符串	
+
+表二 人事管理员表（PersonnelAdministrator）
+属性中文名称	编码	数据类型	约束说明
+人事管理员工号	paNo	5位数字字符串	Key
+
+表三 人员管理（Manage）
+属性中文名称	编码	数据类型	约束说明
+人事管理员工号	paNo	5位数字字符串	Key
+员工工号	empNo	5位数字字符串	Key
+
+表四 科室表（Unit）
+属性中文名称	编码	数据类型	约束说明
+科室编号	unNo	5位数字字符串	Key
+科室名称	unName	10位字符串	Not Null
+科室职责	unResponsibility	30位变长字符串	
+科室位置	unPosition	50位变长字符串	
+
+表五 检验科室表（Laboratory）
+属性中文名称	编码	数据类型	约束说明
+检验科室编号	laNo	5位数字字符串	Key
+检验仓库编号	lwNo	5位数字字符串	Foreign Key，参照检验仓库表
+
+表六 检验医生表（MedicalTechnologist）
+属性中文名称	编码	数据类型	约束说明
+检验医生工号	mtNo	5位数字字符串	Key
+检验科室编号	laNo	5位数字字符串	Foreign Key
+
+表七 检验仓库管理（WarehouseManagement）
+属性中文名称	编码	数据类型	约束说明
+检验仓库编号	wmNo	5位数字字符串	Key
+检验仓库管理医生工号	wmNo	5位数字字符串	Key
+
+表八 检验仓库表（Warehouse）
+属性中文名称	编码	数据类型	约束说明
+检验仓库编号	whNo	5位数字字符串	Key
+仓库名称	whName	10位字符串	Not Null
+仓库容量	whCapacity	数值型	单位：立方米
+
+表九 检验器材表（InspectionEquipment）
+属性中文名称	编码	数据类型	约束说明
+检验器材编号	ieNo	5位数字字符串	Key
+检验仓库编号	wmNo	5位数字字符串	Foreign Key
+器材功能	ieFunc	最大变长字符串	
+器材数量	ieNumber	数值型	Not Null，默认值0
+
+表十 检验记录表（InspectionRecord）
+属性中文名称	编码	数据类型	约束说明
+检验记录编号	irNo	5位数字字符串	Key
+检验医师工号	mtNo	5位数字字符串	Foreign Key
+就诊记录编号	mrNo	5位数字字符串	Foreign Key
+检验时间	irTime	日期型	默认值当天
+检验结果	irResult	最大变长字符串	
+
+表十一 门诊科室表（OutPatientDepartment）
+属性中文名称	编码	数据类型	约束说明
+门诊科室编号	opNo	5位数字字符串	Key
+
+表十二 门诊医生表（OutPatientPhysician）
+属性中文名称	编码	数据类型	约束说明
+门诊医生工号	oppNo	5位数字字符串	Key
+门诊科室编号	opNo	5位数字字符串	Foreign Key
+
+
+表十三 病人表（Patient）
+属性中文名称	编码	数据类型	约束说明
+病人编号	pNo	5位数字字符串	Key
+姓名	pName	10位字符串	Not Null
+身份证号	pID	18位字符串	Not Null
+生日	pbirth	日期型	
+联系电话	pTelephone	13位数字字符串	
+家属	pDependents	最大变长字符串	
+
+表十四 就诊记录表（MedicalRecord）
+属性中文名称	编码	数据类型	约束说明
+就诊记录编号	mrNo	5位数字字符串	Key
+病人编号	pNo	5位数字字符串	Foreign Key
+接诊医生工号	oppNo	5位数字字符串	Foreign Key
+就诊时间	mrTime	日期型	
+诊断内容	mrContent	最大变长字符串	
+
+表十五 病历表（CaseHistory）
+属性中文名称	编码	数据类型	约束说明
+病历编号	chNo	5位数字字符串	Key
+检验记录编号	irNo	5位数字字符串	Foreign Key
+就诊记录编号	mrNo	5位数字字符串	Foreign Key
+取药记录编号	mprNo	5位数字字符串	Foreign Key
+归档时间	chAchiveTime	日期型	
+
+表十六 账单表（Billing）
+属性中文名称	编码	数据类型	约束说明
+账单编号	biNo	5位数字字符串	Key
+病历编号	chNo	5位数字字符串	Foreign Key
+金额	biPay	数值型	Not Null
+支付方式	biPayMethod	20位变长字符串	
+支付日期	biPayTime	日期型	
+
+表十七 药房医师表（Chemist）
+属性中文名称	编码	数据类型	约束说明
+药房医师工号	cNo	5位数字字符串	Key
+
+表十八 取药记录表（MedicationPickupRecord）
+属性中文名称	编码	数据类型	约束说明
+取药记录编号	mprNo	5位数字字符串	Key
+就诊记录编号	mrNo	5位数字字符串	Foreign Key
+药房医师工号	cNo	5位数字字符串	Foreign Key
+取药时间	cTime	日期型	
+
+表十九 药房表（DrugStore）
+属性中文名称	编码	数据类型	约束说明
+药房编号	dsNo	5位数字字符串	Key
+药房名称	dsName	20位变长字符串	
+药房容量	dsCapacity	数值型	单位：立方米
+
+表二十 药房管理（PharmacyManage）
+属性中文名称	编码	数据类型	约束说明
+药房医师工号	cNo	5位数字字符串	Key
+药房编号	dsNo	5位数字字符串	Key
+
+表二十一 药品表（Medicine）
+属性中文名称	编码	数据类型	约束说明
+药品编号	meNo	5位数字字符串	Key
+药房编号	dsNo	5位数字字符串	Foreign Key
+药品功能	mefunc	最大变长字符串	
+药品数量	meNum	数字型	Not Null 默认值为0
+
+表二十二 处方记录表（PrescriptionRecord）
+属性中文名称	编码	数据类型	约束说明
+处方记录编号	prNo	5位数字字符串	Key
+取药记录编号	mprNo	5位数字字符串	Foreign Key
+药品编号	meNo	5位数字字符串	Foreign Key
+用量	prNum	10位字符串	
+用法	prMethod	最大变长字符串	
+根据表关系图，将实体及关联转化为 22 张物理表，涵盖员工、病人、科室、医生、仓库、药房、药品等核心实体，通过主键（如 5 位数字字符串编号）、外键（如病历编号关联病历表与账单表）及约束（非空、唯一等）定义表结构，构建医院管理系统数据模型。表间通过多对多关系表（如人员管理表、药房管理表）、业务流程表（如就诊记录、检验记录、取药记录）实现数据关联，形成从病人就诊、检验治疗、处方取药到费用结算的完整业务链条，确保数据完整性与查询效率。
+
+由于索引会增加插入/更新/删除的开销，所以我们仅对高频查询字段创建索引，（如pNo、oppNo、mrTime），低频字段（如mrContent）不创建索引。
+以下是我们创建的索引
+字段：pNo oppNo
+类型：普通索引
+说明：频繁与病人表、门诊医生表进行连接查询，如：SELECT * FROM MedicalRecord JOIN Patient ON pNo = Patient.pNo
+创建语句：
+CREATE INDEX idx_medicalrecord_pno ON MedicalRecord(pNo);
+CREATE INDEX idx_medicalrecord_oppno ON MedicalRecord(oppNo);
+字段：mrTiem
+类型：普通索引
+说明：按时间查询就诊记录，如SELECT * FROM MedicalRecord WHERE mrTime BETWEEN '2025-01-01' AND '2025-12-31'
+优化：索引可加快范围扫描，避免全表扫描
+创建语句：
+CREATE INDEX idx_medicalrecord_mrtime ON MedicalRecord(mrTime);
+字段：pNo, mrTime
+类型：组合索引
+说明：按病人编号和时间范围查询，如SELECT * FROM MedicalRecord WHERE pNo = 'P0001' AND mrTime > '2025-05-01'
+优势：覆盖pNo过滤和mrTime排序，比单个索引更高效
+创建语句：
+CREATE INDEX idx_medicalrecord_pno_mrtime ON MedicalRecord(pNo,mrTime);
+7系统SQL实现
+7.1完整性设计
+
+本医院管理系统的完整性设计包含四个层面：
+
+1. 实体完整性设计
+- 所有表都定义了主键，确保每条记录的唯一性
+- 主键采用5位数字字符串格式，如员工工号empNo、病人编号pNo等
+- 使用CHECK约束验证编号格式：CHECK (empNo REGEXP '^[0-9]{5}$')
+
+2. 参照完整性设计
+- 通过外键约束维护表间关系的一致性
+- 设置适当的级联操作：ON DELETE CASCADE（级联删除）、ON DELETE SET NULL（置空）
+- 重要关联：病人-就诊记录、就诊记录-检验记录、病历-账单等
+
+3. 域完整性设计
+- 数据类型严格定义：CHAR(5)用于编号，VARCHAR用于名称，TEXT用于长文本
+- CHECK约束验证数据有效性：身份证18位、电话11位、金额非负等
+- 默认值设置：时间字段默认CURRENT_TIMESTAMP，数量字段默认0
+
+4. 用户自定义完整性
+- 通过触发器实现复杂业务规则
+- 存储过程封装事务逻辑，确保数据一致性
+- 视图提供数据访问的安全边界
+
+7.2表的创建
+
+基于物理设计创建22张关系表，核心建表语句如下：
+
+-- 员工表（基础实体）
+CREATE TABLE Employee (
+    empNo CHAR(5) PRIMARY KEY,
+    empName VARCHAR(10) NOT NULL,
+    empStatus VARCHAR(5),
+    empDutyStatus VARCHAR(5),
+    empEntryYear DATE,
+    empJobPosition CHAR(4),
+    empProfile TEXT,
+    CONSTRAINT chk_emp_no CHECK (empNo REGEXP '^[0-9]{5}$')
+);
+
+-- 病人表（核心实体）
+CREATE TABLE Patient (
+    pNo CHAR(5) PRIMARY KEY,
+    pName VARCHAR(10) NOT NULL,
+    pID CHAR(18) NOT NULL UNIQUE,
+    pBirth DATE,
+    pTelephone CHAR(11),
+    pDependents TEXT,
+    CONSTRAINT chk_p_id CHECK (pID REGEXP '^[0-9]{17}[0-9X]$')
+);
+
+-- 就诊记录表（业务核心）
+CREATE TABLE MedicalRecord (
+    mrNo CHAR(5) PRIMARY KEY,
+    pNo CHAR(5),
+    oppNo CHAR(5),
+    mrTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+    mrContent TEXT,
+    CONSTRAINT fk_mr_patient FOREIGN KEY (pNo) REFERENCES Patient(pNo)
+);
+
+完整建表脚本包含：
+- 22张业务表的完整定义
+- 主键、外键、CHECK约束
+- 索引创建（基于查询频率分析）
+- 字符集和排序规则设置
+
+7.3安全性设计
+
+医院管理系统采用基于角色的访问控制：
+
+1. 角色定义
+- hospital_admin：系统管理员，拥有全部权限
+- doctor：医生角色，可查看/修改病人信息、就诊记录
+- nurse：护士角色，可查看病人信息，更新部分医疗记录
+- pharmacist：药师角色，管理药品库存、处方记录
+- lab_technician：检验技师，管理检验记录和设备
+- finance_staff：财务人员，管理账单和财务统计
+
+2. 权限分配原则
+- 最小权限原则：每个角色只获得执行工作所需的最小权限
+- 职责分离：不同角色间职责清晰，避免权限冲突
+- 数据敏感性：敏感信息（如身份证号）限制访问范围
+
+3. 用户管理
+CREATE USER 'doctor1'@'localhost' IDENTIFIED BY 'doc123';
+GRANT 'doctor' TO 'doctor1'@'localhost';
+SET DEFAULT ROLE ALL TO 'doctor1'@'localhost';
+
+4. 数据加密
+- 密码使用强加密算法存储
+- 敏感数据传输使用SSL/TLS
+- 重要操作记录审计日志
+
+7.4视图的创建
+
+设计5个核心业务视图，提供数据访问的便利性和安全性：
+
+1. 病人就诊详细信息视图（PatientMedicalView）
+功能：整合病人基本信息、就诊记录、医生信息
+应用：门诊医生快速查看病人历史
+CREATE VIEW PatientMedicalView AS
+SELECT p.pNo, p.pName, mr.mrTime, mr.mrContent, e.empName AS doctorName
+FROM Patient p
+JOIN MedicalRecord mr ON p.pNo = mr.pNo
+JOIN OutPatientPhysician opp ON mr.oppNo = opp.oppNo
+JOIN Employee e ON opp.oppNo = e.empNo;
+
+2. 检验结果汇总视图（InspectionSummaryView）
+功能：汇总检验相关的所有信息
+应用：检验科医生查看检验历史和结果
+
+3. 药品库存管理视图（MedicineInventoryView）
+功能：实时显示药品库存状态和预警信息
+应用：药师进行库存管理和补货决策
+
+4. 财务统计视图（FinancialSummaryView）
+功能：提供收费统计和财务分析数据
+应用：财务部门生成各类财务报表
+
+5. 员工科室分布视图（EmployeeDepartmentView）
+功能：显示员工的职位分布和科室归属
+应用：人事管理和组织架构查询
+
+7.5存储过程的创建
+
+设计5个核心存储过程，封装复杂业务逻辑：
+
+1. 病人就诊流程（RegisterPatientVisit）
+功能：完整的病人挂号就诊流程
+参数：病人信息、医生工号、诊断内容
+逻辑：检查病人是否存在→创建/更新病人信息→生成就诊记录
+CALL RegisterPatientVisit('20001', '张三', '110101199001011234', '13800138001', '10001', '感冒发热', @mrNo);
+
+2. 检验流程处理（ProcessInspection）
+功能：处理医学检验的完整流程
+参数：就诊记录号、检验医师、检验结果
+逻辑：验证权限→生成检验记录→更新相关状态
+
+3. 药品出库管理（DispenseMedicine）
+功能：药品出库时的库存检查和更新
+参数：药品编号、出库数量
+逻辑：检查库存→验证数量→更新库存→记录出库日志
+
+4. 月度财务报告（GenerateMonthlyFinancialReport）
+功能：生成指定月份的财务统计报告
+参数：年份、月份
+输出：按日期和支付方式统计的收入明细
+
+5. 批量库存更新（BatchUpdateMedicineStock）
+功能：批量补充低于阈值的药品库存
+参数：药房编号、库存阈值
+逻辑：查找低库存药品→批量补充到安全库存
+
+7.6触发器的创建
+
+设计5个触发器，实现自动化业务规则：
+
+1. 自动病历创建触发器（after_medical_record_insert）
+时机：就诊记录插入后
+功能：自动为每个就诊记录创建对应的病历档案
+目的：确保就诊记录和病历的一致性
+
+2. 药品库存预警触发器（medicine_stock_warning）
+时机：药品数量更新后
+功能：当库存低于安全阈值时自动生成预警
+目的：防止药品断货，保障医疗服务连续性
+
+3. 病人删除保护触发器（before_patient_delete）
+时机：删除病人记录前
+功能：检查是否存在关联的就诊记录，有则阻止删除
+目的：保护重要医疗数据，防止误删
+
+4. 员工状态更新触发器（update_employee_status）
+时机：员工信息更新前
+功能：职级变更时自动更新相关时间戳
+目的：记录员工职业发展轨迹
+
+5. 器材变更日志触发器（equipment_quantity_log）
+时机：检验器材数量更新后
+功能：记录所有器材数量变更的详细日志
+目的：实现设备管理的可追溯性
+
+演示实例：
+
+-- 测试存储过程
+CALL RegisterPatientVisit('20003', '患者丙', '110101199003033456', '13800138003', '10001', '头痛，发热', @new_mrNo);
+SELECT @new_mrNo AS '新生成的就诊记录编号';
+
+-- 测试视图查询
+SELECT * FROM PatientMedicalView WHERE pName LIKE '%患者%';
+
+-- 测试财务报告
+CALL GenerateMonthlyFinancialReport(2025, 5);
+
+-- 触发器演示
+INSERT INTO MedicalRecord VALUES ('30001', '20001', '10001', NOW(), '普通感冒');
+-- 自动创建病历记录
+
+UPDATE Medicine SET meNum = 5 WHERE meNo = '60001';
+-- 自动生成库存预警
+
+系统实现特点：
+1. 完整性约束保证数据质量
+2. 角色权限确保数据安全
+3. 视图简化复杂查询
+4. 存储过程封装业务逻辑
+5. 触发器实现自动化管理
+6. 索引优化查询性能
+
+该实现涵盖了医院管理系统的核心功能，为病人就诊、医疗检验、药品管理、财务结算等业务流程提供了完整的数据库支持。
