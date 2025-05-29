@@ -98,7 +98,7 @@ DELIMITER ;
 -- ================================================================================
 DELIMITER $$
 CREATE PROCEDURE sp_medicine_stock_report(
-    IN p_threshold INT DEFAULT 10
+    IN p_threshold INT
 )
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -106,6 +106,11 @@ BEGIN
         ROLLBACK;
         RESIGNAL;
     END;
+
+    -- Set default for p_threshold if NULL
+    IF p_threshold IS NULL THEN
+        SET p_threshold = 10;
+    END IF;
     
     -- 库存充足的药品（数量 >= 阈值）
     SELECT 
@@ -168,8 +173,8 @@ DELIMITER ;
 -- ================================================================================
 DELIMITER $$
 CREATE PROCEDURE sp_doctor_workload_statistics(
-    IN p_start_date DATE DEFAULT NULL,
-    IN p_end_date DATE DEFAULT NULL
+    IN p_start_date DATE,
+    IN p_end_date DATE
 )
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -270,7 +275,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE sp_generate_patient_bill(
     IN p_case_history_no CHAR(5),
-    IN p_base_consultation_fee DECIMAL(10,2) DEFAULT 50.00
+    IN p_base_consultation_fee DECIMAL(10,2)
 )
 BEGIN
     DECLARE v_total_amount DECIMAL(10,2) DEFAULT 0;
@@ -280,11 +285,10 @@ BEGIN
     DECLARE v_patient_name VARCHAR(10);
     DECLARE v_medical_record_no CHAR(5);
     
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
+    -- Set default for p_base_consultation_fee if NULL
+    IF p_base_consultation_fee IS NULL THEN
+        SET p_base_consultation_fee = 50.00;
+    END IF;
     
     -- 验证病历是否存在
     IF NOT EXISTS (SELECT 1 FROM CaseHistory WHERE chNo = p_case_history_no) THEN

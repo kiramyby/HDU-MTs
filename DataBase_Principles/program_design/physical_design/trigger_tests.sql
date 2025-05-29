@@ -83,8 +83,8 @@ SELECT meNo, meNum FROM Medicine WHERE meNo = 'M0001';
 
 -- 测试3.2：开具处方，数量超过库存（应该失败）
 -- 尝试开具20盒止痛药（库存只有8盒）
--- INSERT INTO PrescriptionRecord (prNo, mprNo, meNo, prNum, prMethod) 
--- VALUES ('PR002', 'MPR01', 'M0002', '20', '按需服用');
+INSERT INTO PrescriptionRecord (prNo, mprNo, meNo, prNum, prMethod) 
+VALUES ('PR002', 'MPR01', 'M0002', '20', '按需服用');
 -- 此语句会失败并显示错误信息
 
 -- --------------------------------------------------------------------------------
