@@ -1,0 +1,348 @@
+医院管理系统数据库完整性设计说明
+================================================
+
+表1 - Employee（员工表）
+-----------------------
+实体完整性：
+  主键：empNo CHAR(5) PRIMARY KEY
+  确保每个员工都有唯一的工号，且工号不能为空
+
+参照完整性：
+  无外键约束（基础表）
+
+用户定义完整性：
+  - empName VARCHAR(10) NOT NULL：员工姓名不能为空
+  - empStatus VARCHAR(5)：在职状态限制长度，保证数据一致性
+  - empDutyStatus VARCHAR(5)：在岗状态限制长度
+  - empJobPosition CHAR(4)：职级固定长度，保证格式统一
+
+表2 - PersonnelAdministrator（人事管理员表）
+------------------------------------------
+实体完整性：
+  主键：paNo CHAR(5) PRIMARY KEY
+  确保每个人事管理员都有唯一的工号，且工号不能为空
+
+参照完整性：
+  外键：paNo REFERENCES Employee(empNo)
+  确保人事管理员必须是已存在的员工
+
+用户定义完整性：
+  继承Employee表的约束条件
+
+表3 - Manage（人员管理表）
+-------------------------
+实体完整性：
+  主键：(paNo, empNo) 复合主键
+  确保每个人事管理员与员工的管理关系记录唯一，不能重复
+
+参照完整性：
+  外键1：paNo REFERENCES PersonnelAdministrator(paNo)
+  外键2：empNo REFERENCES Employee(empNo)
+  确保管理关系中的人事管理员和被管理员工都必须存在
+
+用户定义完整性：
+  - 复合主键确保同一个人事管理员不能重复管理同一个员工
+  - 外键约束确保管理关系的有效性
+
+表4 - Unit（科室表）
+-------------------
+实体完整性：
+  主键：unNo CHAR(5) PRIMARY KEY
+  确保每个科室都有唯一的编号，且编号不能为空
+
+参照完整性：
+  无外键约束（基础表）
+
+用户定义完整性：
+  - unName VARCHAR(10) NOT NULL：科室名称不能为空
+  - unPosition VARCHAR(50)：科室位置信息长度限制
+
+表5 - Laboratory（检验科室表）
+-----------------------------
+实体完整性：
+  主键：laNo CHAR(5) PRIMARY KEY
+  确保每个检验科室都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键：lwNo REFERENCES Warehouse(whNo)
+  确保检验科室关联的检验仓库必须存在
+
+用户定义完整性：
+  检验仓库与检验科室的一对一关系通过外键约束保证
+
+表6 - MedicalTechnologist（检验医生表）
+-------------------------------------
+实体完整性：
+  主键：mtNo CHAR(5) PRIMARY KEY
+  确保每个检验医生都有唯一的工号，且工号不能为空
+
+参照完整性：
+  外键1：mtNo REFERENCES Employee(empNo)
+  外键2：laNo REFERENCES Laboratory(laNo)
+  确保检验医生必须是已存在的员工，且所属检验科室必须存在
+
+用户定义完整性：
+  员工工号在检验医生表中复用，体现了员工的不同职能
+
+表7 - WarehouseManagement（检验仓库管理表）
+-----------------------------------------
+实体完整性：
+  主键：(wmNo, wmDoctorNo) 复合主键
+  确保每个仓库与管理医生的管理关系记录唯一
+
+参照完整性：
+  外键1：wmNo REFERENCES Warehouse(whNo)
+  外键2：wmDoctorNo REFERENCES Employee(empNo)
+  确保被管理的仓库存在，且管理医生是已存在的员工
+
+用户定义完整性：
+  管理关系表通过复合主键避免重复管理记录
+
+表8 - Warehouse（检验仓库表）
+----------------------------
+实体完整性：
+  主键：whNo CHAR(5) PRIMARY KEY
+  确保每个检验仓库都有唯一的编号，且编号不能为空
+
+参照完整性：
+  无外键约束（基础表）
+
+用户定义完整性：
+  - whName VARCHAR(10) NOT NULL：仓库名称不能为空
+  - whCapacity DECIMAL(10,2)：仓库容量精度控制，确保数值合理
+
+表9 - InspectionEquipment（检验器材表）
+------------------------------------
+实体完整性：
+  主键：ieNo CHAR(5) PRIMARY KEY
+  确保每个检验器材都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键：wmNo REFERENCES Warehouse(whNo)
+  确保检验器材所在的仓库必须存在
+
+用户定义完整性：
+  - ieNumber INT NOT NULL DEFAULT 0：器材数量不能为空，默认为0
+  - ieNumber >= 0：隐含约束，器材数量不能为负数
+
+表10 - InspectionRecord（检验记录表）
+-----------------------------------
+实体完整性：
+  主键：irNo CHAR(5) PRIMARY KEY
+  确保每条检验记录都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键1：mtNo REFERENCES MedicalTechnologist(mtNo)
+  外键2：mrNo REFERENCES MedicalRecord(mrNo)
+  确保检验记录的检验医师存在，且关联的就诊记录存在
+
+用户定义完整性：
+  - irTime DATE DEFAULT (CURRENT_DATE)：检验时间默认为当前日期
+  - 时间字段确保检验记录的时效性
+
+表11 - OutPatientDepartment（门诊科室表）
+--------------------------------------
+实体完整性：
+  主键：opNo CHAR(5) PRIMARY KEY
+  确保每个门诊科室都有唯一的编号，且编号不能为空
+
+参照完整性：
+  无外键约束（基础表）
+
+用户定义完整性：
+  基础科室信息表，无特殊约束
+
+表12 - OutPatientPhysician（门诊医生表）
+-------------------------------------
+实体完整性：
+  主键：oppNo CHAR(5) PRIMARY KEY
+  确保每个门诊医生都有唯一的工号，且工号不能为空
+
+参照完整性：
+  外键1：oppNo REFERENCES Employee(empNo)
+  外键2：opNo REFERENCES OutPatientDepartment(opNo)
+  确保门诊医生必须是已存在的员工，且所属门诊科室必须存在
+
+用户定义完整性：
+  员工工号在门诊医生表中复用，体现了员工的不同职能
+
+表13 - Patient（病人表）
+-----------------------
+实体完整性：
+  主键：pNo CHAR(5) PRIMARY KEY
+  确保每个病人都有唯一的编号，且编号不能为空
+
+参照完整性：
+  无外键约束（基础表）
+
+用户定义完整性：
+  - pName VARCHAR(10) NOT NULL：病人姓名不能为空
+  - pID CHAR(18) NOT NULL：身份证号不能为空且固定长度，确保身份信息完整
+  - pTelephone CHAR(13)：联系电话固定长度，保证格式统一
+
+表14 - MedicalRecord（就诊记录表）
+--------------------------------
+实体完整性：
+  主键：mrNo CHAR(5) PRIMARY KEY
+  确保每条就诊记录都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键1：pNo REFERENCES Patient(pNo)
+  外键2：oppNo REFERENCES OutPatientPhysician(oppNo)
+  确保就诊记录关联的病人存在，且接诊医生是已存在的门诊医生
+
+用户定义完整性：
+  就诊时间等确保业务流程的时序性，支持业务流程的时间追踪和审计
+
+表15 - CaseHistory（病历表）
+---------------------------
+实体完整性：
+  主键：chNo CHAR(5) PRIMARY KEY
+  确保每份病历都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键1：irNo REFERENCES InspectionRecord(irNo)
+  外键2：mrNo REFERENCES MedicalRecord(mrNo)
+  外键3：mprNo REFERENCES MedicationPickupRecord(mprNo)
+  确保病历关联的检验记录、就诊记录和取药记录都必须存在
+
+用户定义完整性：
+  病历表关联三个核心记录：检验、就诊、取药，形成完整诊疗流程
+
+表16 - Billing（账单表）
+-----------------------
+实体完整性：
+  主键：biNo CHAR(5) PRIMARY KEY
+  确保每张账单都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键：chNo REFERENCES CaseHistory(chNo)
+  确保账单关联的病历必须存在
+
+用户定义完整性：
+  - biPay DECIMAL(10,2) NOT NULL：账单金额不能为空且精度控制
+  - biPay > 0：隐含约束，账单金额必须为正数
+  - biPayMethod VARCHAR(20)：支付方式长度限制
+  - 账单与病历一对一关系，确保费用追溯的完整性
+
+表17 - Chemist（药房医师表）
+---------------------------
+实体完整性：
+  主键：cNo CHAR(5) PRIMARY KEY
+  确保每个药房医师都有唯一的工号，且工号不能为空
+
+参照完整性：
+  外键：cNo REFERENCES Employee(empNo)
+  确保药房医师必须是已存在的员工
+
+用户定义完整性：
+  继承Employee表的约束条件
+
+表18 - MedicationPickupRecord（取药记录表）
+-----------------------------------------
+实体完整性：
+  主键：mprNo CHAR(5) PRIMARY KEY
+  确保每条取药记录都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键1：mrNo REFERENCES MedicalRecord(mrNo)
+  外键2：cNo REFERENCES Chemist(cNo)
+  确保取药记录关联的就诊记录存在，且负责的药房医师存在
+
+用户定义完整性：
+  取药时间等确保业务流程的时序性
+
+表19 - DrugStore（药房表）
+-------------------------
+实体完整性：
+  主键：dsNo CHAR(5) PRIMARY KEY
+  确保每个药房都有唯一的编号，且编号不能为空
+
+参照完整性：
+  无外键约束（基础表）
+
+用户定义完整性：
+  - dsName VARCHAR(20)：药房名称长度限制，比仓库名称允许更长
+  - dsCapacity DECIMAL(10,2)：药房容量精度控制
+
+表20 - PharmacyManage（药房管理表）
+---------------------------------
+实体完整性：
+  主键：(cNo, dsNo) 复合主键
+  确保每个药房医师与药房的管理关系记录唯一，不能重复
+
+参照完整性：
+  外键1：cNo REFERENCES Chemist(cNo)
+  外键2：dsNo REFERENCES DrugStore(dsNo)
+  确保管理关系中的药房医师和药房都必须存在
+
+用户定义完整性：
+  - 复合主键确保同一个药房医师不能重复管理同一个药房
+  - 外键约束确保管理关系的有效性
+  - 药房医师同时管理多个药房，体现了资源的灵活配置
+
+表21 - Medicine（药品表）
+------------------------
+实体完整性：
+  主键：meNo CHAR(5) PRIMARY KEY
+  确保每种药品都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键：dsNo REFERENCES DrugStore(dsNo)
+  确保药品所在的药房必须存在
+
+用户定义完整性：
+  - meNum INT NOT NULL DEFAULT 0：药品数量不能为空，默认为0
+  - meNum >= 0：隐含约束，药品数量不能为负数
+
+表22 - PrescriptionRecord（处方记录表）
+------------------------------------
+实体完整性：
+  主键：prNo CHAR(5) PRIMARY KEY
+  确保每条处方记录都有唯一的编号，且编号不能为空
+
+参照完整性：
+  外键1：mprNo REFERENCES MedicationPickupRecord(mprNo)
+  外键2：meNo REFERENCES Medicine(meNo)
+  确保处方记录关联的取药记录和药品都必须存在
+
+用户定义完整性：
+  - prNum VARCHAR(10)：用量信息长度限制，支持灵活的剂量描述
+  - prMethod TEXT：用法详细描述，允许完整的用药说明
+  - 处方记录通过取药记录关联就诊，确保处方的合法性
+
+数据库整体完整性设计总结
+==============================
+
+数据长度约束：
+- 所有编号字段统一使用CHAR(5)：确保编号格式一致性
+- 姓名字段使用VARCHAR(10)：适应中文姓名长度
+- 功能描述字段使用TEXT：允许详细描述
+- 身份证号使用CHAR(18)：严格按照国家标准身份证号长度
+- 联系电话使用CHAR(13)：支持手机号和固话格式
+- 金额字段使用DECIMAL(10,2)：确保财务数据精度
+
+业务逻辑约束：
+- 员工工号在人事管理员表、检验医生表、门诊医生表、药房医师表中复用，体现了员工的不同职能
+- 检验仓库与检验科室的一对一关系通过外键约束保证
+- 管理关系表通过复合主键避免重复管理记录
+- 病历表关联三个核心记录：检验、就诊、取药，形成完整诊疗流程
+- 处方记录通过取药记录关联就诊，确保处方的合法性
+- 药房医师同时管理多个药房，体现了资源的灵活配置
+- 账单与病历一对一关系，确保费用追溯的完整性
+
+时间约束：
+- 就诊时间、取药时间、支付时间、归档时间等确保业务流程的时序性
+- 支持业务流程的时间追踪和审计
+
+完整性设计的优势：
+1. 确保数据的准确性和一致性
+2. 防止无效数据的插入
+3. 维护表间关系的正确性
+4. 支持业务规则的自动执行
+5. 提高数据质量和系统可靠性
+6. 医疗业务的完整性：从就诊到检验、取药、结算的全流程数据完整性
+7. 财务数据的准确性：账单金额的非空和正数约束
+8. 身份信息的规范性：身份证号和联系方式的格式约束
+9. 医疗资源的合理性：药品数量、药房容量等业务约束
+10. 处方安全性：通过多层外键约束确保处方的合法性和可追溯性
