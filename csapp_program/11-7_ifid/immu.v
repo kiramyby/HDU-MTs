@@ -7,10 +7,8 @@
 `define OP_SW     7'b0100011  // Store型指令
 
 module ImmU (
-    inst, imm32, rst_n, clk
-);
-    input rst_n;
-    input clk; 
+    inst, imm32
+);=
     input [31:0] inst;
     output reg [31:0] imm32;
     reg [2:0] inst_Type; // 指令格式类型
