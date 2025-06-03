@@ -5,8 +5,9 @@
 `define OP_JALR   7'b1100111  // JALR型指令
 `define OP_LW     7'b0000011  // Load型指令
 `define OP_SW     7'b0100011  // Store型指令
+`define OP_LUI    7'b0110111  // LUI指令
 
-module ImmU (
+module immu (
     inst, imm32
 );
     input [31:0] inst;
@@ -46,9 +47,15 @@ module ImmU (
                 // Store型指令立即数计算
                 imm32 = {{20{inst[31]}}, inst[31:25], inst[11:7]};
             end
+            `OP_LUI: begin
+                inst_Type = 3'b001; // LUI型指令格式编码
+                // LUI型指令立即数计算
+                imm32 = {inst[31:12], 12'b0};
+            end
             default: begin
                 // 未知指令，设置为0
                 imm32 = 32'b0;
+                inst_Type = 3'b000;
             end
         endcase
     end

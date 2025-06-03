@@ -1,9 +1,9 @@
 module CU (
     IS_R, IS_IMM, IS_LUI, IS_LW, IS_SW, IS_BEQ, IS_JALR, IS_JAL, clk, rst_n, ALU_OP,
-    ZF,
+    ZF_rs,
     PC_Write, PC0_Write, IR_Write, Reg_Write, Mem_Write, rs2_imm_s, w_data_s, PC_s, ALU_OP_o
 );
-    input IS_R, IS_IMM, IS_LUI, IS_LW, IS_SW, IS_BEQ, IS_JALR, IS_JAL, ZF;
+    input IS_R, IS_IMM, IS_LUI, IS_LW, IS_SW, IS_BEQ, IS_JALR, IS_JAL, ZF_rs;
     input clk, rst_n;
     input [3:0] ALU_OP;
     output reg PC_Write, PC0_Write, IR_Write, Reg_Write, Mem_Write;
@@ -244,7 +244,7 @@ module CU (
                 end
 
                 S14: begin
-                    PC_Write <= ZF;
+                    PC_Write <= ZF_rs; 
                     PC0_Write <= 0;
                     IR_Write <= 0;
                     Reg_Write <= 0;

@@ -30,4 +30,5 @@ module ifp (
             funct7 <= inst[31:25];
         end
     end
-)
+
+endmodule
