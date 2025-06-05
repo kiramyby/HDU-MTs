@@ -22,6 +22,9 @@ typedef struct SportEvent {
 typedef struct Student {
     char student_id[15];        // 学号
     char name[20];              // 姓名
+    char gender[10];            // 性别
+    char class_name[30];        // 班级
+    char contact[20];           // 联系方式
     struct Student* next;       // 下一个学生节点指针
 } Student;
 

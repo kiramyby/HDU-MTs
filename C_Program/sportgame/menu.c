@@ -6,33 +6,37 @@
 #include "registration_mgmt.h"
 #include "auth.h"
 #include "utils.h"
+#include "display.h"
 
 // 统计查询菜单
 void statistics_query_menu() {
     int choice;
     do {
-        printf("\n=== 统计查询 ===\n");
-        printf("1. 各项目报名人数统计\n");
-        printf("2. 每个学生的报名数量\n");
-        printf("3. 查询比赛成绩\n");
-        printf("0. 返回主菜单\n");
-        printf("请选择操作: ");
+        clear_screen();
+        display_statistics_menu();
         scanf("%d", &choice); clear_input_buffer();
 
         switch (choice) {
         case 1:
+            clear_screen();
             count_participants_per_event();
+            wait_for_enter();
             break;
         case 2:
+            clear_screen();
             count_registrations_per_student();
+            wait_for_enter();
             break;
         case 3:
+            clear_screen();
             query_scores();
+            wait_for_enter();
             break;
         case 0:
             return;
         default:
-            printf("无效选项！\n");
+            print_error_message("无效选项！");
+            wait_for_enter();
         }
     } while (1);
 }
@@ -41,14 +45,8 @@ void statistics_query_menu() {
 void admin_menu() {
     int choice;
     do {
-        printf("\n=== 管理员菜单 ===\n");
-        printf("1. 运动项目管理\n");
-        printf("2. 学生信息管理\n");
-        printf("3. 报名管理\n");
-        printf("4. 统计查询\n");
-        printf("5. 录入成绩\n");
-        printf("0. 退出系统\n");
-        printf("请选择操作: ");
+        clear_screen();
+        display_admin_menu();
         scanf("%d", &choice); clear_input_buffer();
 
         switch (choice) {
@@ -65,13 +63,16 @@ void admin_menu() {
             statistics_query_menu();
             break;
         case 5:
+            clear_screen();
             enter_score();
+            wait_for_enter();
             break;
         case 0:
             logout();
             break;
         default:
-            printf("无效选项！\n");
+            print_error_message("无效选项！");
+            wait_for_enter();
         }
     } while (1);
 }

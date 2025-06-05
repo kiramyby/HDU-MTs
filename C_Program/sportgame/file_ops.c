@@ -61,9 +61,12 @@ void save_students_to_file() {
     }
     Student* current = student_head;
     while (current) {
-        fprintf(fp, "%s|%s\n",
+        fprintf(fp, "%s|%s|%s|%s|%s\n",
             current->student_id,
-            current->name); // 将每个学生的详细信息写入文件
+            current->name,
+            current->gender,
+            current->class_name,
+            current->contact); // 将每个学生的详细信息写入文件
         current = current->next;
     }
     fclose(fp);
@@ -77,9 +80,12 @@ void load_students_from_file() {
     char line[256];
     while (fgets(line, sizeof(line), fp)) {
         Student* new_student = (Student*)malloc(sizeof(Student));
-        sscanf(line, "%[^|]|%[^|\n]",
+        sscanf(line, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|\n]",
             new_student->student_id,
-            new_student->name); // 从文件读取每个学生的详细信息
+            new_student->name,
+            new_student->gender,
+            new_student->class_name,
+            new_student->contact); // 从文件读取每个学生的详细信息
         new_student->next = student_head;
         student_head = new_student;
     }
