@@ -205,7 +205,7 @@ void print_table_separator(int col_count, int col_widths[]) {
 // 显示运动项目表格头部
 void display_event_table_header() {
     const char* headers[] = {"项目编号", "项目名称", "类型", "类别", "时间", "地点", "状态", "报名人数"};
-    int col_widths[] = {12, 20, 10, 10, 12, 15, 10, 12};
+    int col_widths[] = {12, 20, 10, 10, 20, 15, 10, 12};
     print_table_header(headers, 8, col_widths);
 }
 
@@ -225,7 +225,7 @@ void display_event_row(const SportEvent* event) {
         event->status,
         participants
     };
-    int col_widths[] = {12, 20, 10, 10, 12, 15, 10, 12};
+    int col_widths[] = {12, 20, 10, 10, 20, 15, 10, 12};
     print_table_row(data, 8, col_widths);
 }
 

@@ -100,7 +100,7 @@ void show_all_events() {
         }
         
         // 打印表格底部
-        int col_widths[] = {10, 20, 8, 8, 12, 15, 8, 12};
+        int col_widths[] = {12, 20, 10, 10, 20, 15, 10, 12};
         print_table_separator(8, col_widths);
         
         // 显示分页信息
@@ -137,7 +137,7 @@ void modify_event() {
     printf("\n%s当前项目信息:%s\n", BOLD, RESET_COLOR);
     display_event_table_header();
     display_event_row(event);
-    int col_widths[] = {10, 20, 8, 8, 12, 15, 8, 12};
+    int col_widths[] = {12, 20, 10, 10, 20, 15, 10, 12};
     print_table_separator(8, col_widths);
 
     printf("\n%s请输入新信息:%s\n", BOLD, RESET_COLOR);
@@ -199,7 +199,7 @@ void search_event() {
     }
     
     // 打印表格底部
-    int col_widths[] = {10, 20, 8, 8, 12, 15, 8, 12};
+    int col_widths[] = {12, 20, 10, 10, 20, 15, 10, 12};
     print_table_separator(8, col_widths);
     
     char result_msg[100];
