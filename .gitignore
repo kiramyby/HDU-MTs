@@ -83,3 +83,5 @@ Desktop.ini
 # Specific to your project structure
 # Add any other project-specific exclusions here
 C_Program/SIM/StudentInformationManager/store
+*.dSYM/
+*.dat

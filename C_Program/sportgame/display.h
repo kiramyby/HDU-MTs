@@ -28,6 +28,9 @@
 #define LEFT_CROSS      "├"
 #define RIGHT_CROSS     "┤"
 
+// 工具函数
+int get_display_width(const char* str);
+
 // 显示格式化函数
 void print_header(const char* title);
 void print_separator();

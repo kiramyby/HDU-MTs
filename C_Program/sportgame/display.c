@@ -1,12 +1,47 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <locale.h>
+#include <wchar.h>
 #include "display.h"
 #include "types.h"
 
+// 计算字符串的显示宽度（考虑中文字符和emoji）
+int get_display_width(const char* str) {
+    if (!str) return 0;
+    
+    int width = 0;
+    const unsigned char* s = (const unsigned char*)str;
+    
+    while (*s) {
+        if (*s < 0x80) {
+            // ASCII 字符，宽度为 1
+            width++;
+            s++;
+        } else if ((*s & 0xE0) == 0xC0) {
+            // UTF-8 两字节字符，宽度为 1
+            width++;
+            s += 2;
+        } else if ((*s & 0xF0) == 0xE0) {
+            // UTF-8 三字节字符（包括大部分中文字符），宽度为 2
+            width += 2;
+            s += 3;
+        } else if ((*s & 0xF8) == 0xF0) {
+            // UTF-8 四字节字符（包括emoji），宽度为 2
+            width += 2;
+            s += 4;
+        } else {
+            // 无效字符，跳过
+            s++;
+        }
+    }
+    
+    return width;
+}
+
 // 打印标题头部
 void print_header(const char* title) {
-    int title_len = strlen(title);
+    int title_len = get_display_width(title);
     int box_width = title_len + 6; // 额外空间用于边框和填充
     
     printf("\n");
@@ -56,7 +91,7 @@ void print_box_bottom(int width) {
 
 // 打印居中文本
 void print_centered_text(const char* text, int width) {
-    int text_len = strlen(text);
+    int text_len = get_display_width(text);
     int padding = (width - text_len) / 2;
     
     for (int i = 0; i < padding; i++) {
@@ -113,7 +148,7 @@ void print_table_header(const char* headers[], int col_count, int col_widths[]) 
     printf("%s%s%s", CYAN, VERTICAL, RESET_COLOR);
     for (int i = 0; i < col_count; i++) {
         printf("%s%s", BOLD, headers[i]);
-        int padding = col_widths[i] - strlen(headers[i]);
+        int padding = col_widths[i] - get_display_width(headers[i]);
         for (int j = 0; j < padding; j++) {
             printf(" ");
         }
@@ -142,7 +177,7 @@ void print_table_row(const char* data[], int col_count, int col_widths[]) {
     printf("%s%s%s", CYAN, VERTICAL, RESET_COLOR);
     for (int i = 0; i < col_count; i++) {
         printf("%s", data[i]);
-        int padding = col_widths[i] - strlen(data[i]);
+        int padding = col_widths[i] - get_display_width(data[i]);
         for (int j = 0; j < padding; j++) {
             printf(" ");
         }
@@ -170,7 +205,7 @@ void print_table_separator(int col_count, int col_widths[]) {
 // 显示运动项目表格头部
 void display_event_table_header() {
     const char* headers[] = {"项目编号", "项目名称", "类型", "类别", "时间", "地点", "状态", "报名人数"};
-    int col_widths[] = {10, 20, 8, 8, 12, 15, 8, 12};
+    int col_widths[] = {12, 20, 10, 10, 12, 15, 10, 12};
     print_table_header(headers, 8, col_widths);
 }
 
@@ -190,7 +225,7 @@ void display_event_row(const SportEvent* event) {
         event->status,
         participants
     };
-    int col_widths[] = {10, 20, 8, 8, 12, 15, 8, 12};
+    int col_widths[] = {12, 20, 10, 10, 12, 15, 10, 12};
     print_table_row(data, 8, col_widths);
 }
 
