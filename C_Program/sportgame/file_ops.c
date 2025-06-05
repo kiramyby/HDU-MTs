@@ -101,11 +101,12 @@ void save_registrations_to_file() {
     }
     Registration* current = reg_head;
     while (current) {
-        fprintf(fp, "%s|%s|%s|%.2f\n",
+        fprintf(fp, "%s|%s|%s|%.2f|%s\n",
             current->reg_id,
             current->student_id,
             current->event_id,
-            current->score); // 将每个报名记录的详细信息写入文件
+            current->score,
+            current->time); // 将每个报名记录的详细信息写入文件
         current = current->next;
     }
     fclose(fp);
@@ -119,11 +120,12 @@ void load_registrations_from_file() {
     char line[256];
     while (fgets(line, sizeof(line), fp)) {
         Registration* new_reg = (Registration*)malloc(sizeof(Registration));
-        sscanf(line, "%[^|]|%[^|]|%[^|]|%f",
+        sscanf(line, "%[^|]|%[^|]|%[^|]|%f|%[^|\n]",
             new_reg->reg_id,
             new_reg->student_id,
             new_reg->event_id,
-            &new_reg->score); // 从文件读取每个报名记录的详细信息
+            &new_reg->score,
+            new_reg->time); // 从文件读取每个报名记录的详细信息
         new_reg->next = reg_head;
         reg_head = new_reg;
     }
