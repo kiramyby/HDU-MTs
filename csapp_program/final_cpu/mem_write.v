@@ -1,3 +1,4 @@
+// Mem_Write 数据存储器
 module mem_write(
     clk_dm, DM_Addr, M_W_Data, M_R_Data, Mem_Write,
     rst_n
@@ -9,19 +10,12 @@ module mem_write(
     input rst_n;
     input Mem_Write;
 
-    wire [31:0] DM_Data;
-
-    // 数据存储器实例
-    reg_file32 Mem(
-        .clk_Regs(clk_dm),
-        .R_Addr_A(DM_Addr[7:2]), // 读取地址
-        .W_Addr(DM_Addr[7:2]),   // 写入地址
-        .W_Data(M_W_Data),       // 写入数据
-        .R_Data_A(DM_Data),      // 读取数据
-        .Reg_Write(Mem_Write),     // 写使能
-        .rst_n(rst_n)
+    MemRAM instMemRAM(
+        .clka(clk_dm),
+        .addra(DM_Addr[7:2]),  // 6位地址，寻址64个32位字
+        .dina(M_W_Data),       // 写入数据
+        .wea(Mem_Write),       // 写使能信号
+        .douta(M_R_Data)       // 读出数据
     );
-
-    assign M_R_Data = DM_Data;
 
 endmodule

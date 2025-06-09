@@ -1,3 +1,4 @@
+// id2 次级译码器
 module id2(
     opcode, funct3, funct7, 
     IS_R, IS_IMM, IS_LUI, IS_LW, IS_SW, IS_BEQ, IS_JAL, IS_JALR, ALU_OP

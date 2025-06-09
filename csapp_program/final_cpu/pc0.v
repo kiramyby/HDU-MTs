@@ -1,3 +1,4 @@
+// pc0 当前指令寄存器
 module pc0(
     PC_Write, clk_im_n, PC0_o, PC0_i,
     rst_n

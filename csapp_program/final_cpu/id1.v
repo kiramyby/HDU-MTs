@@ -1,3 +1,4 @@
+// id1 初级译码器
 module id1 (
     inst, rs1, rs2, rd, opcode, funct3, funct7, imm32
 );

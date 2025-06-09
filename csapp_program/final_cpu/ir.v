@@ -1,3 +1,4 @@
+// ir 指令寄存器
 module ir(
     clk_im_n, IR_Write, inst_code, inst,
     rst_n

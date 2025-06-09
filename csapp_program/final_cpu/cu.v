@@ -1,3 +1,4 @@
+// CU 控制单元
 module CU (
     IS_R, IS_IMM, IS_LUI, IS_LW, IS_SW, IS_BEQ, IS_JALR, IS_JAL, clk, rst_n, ALU_OP,
     ZF_rs,

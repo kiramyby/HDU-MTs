@@ -1,3 +1,4 @@
+// immu 立即数生成模块
 // 定义RISC-V指令格式类型，后续生成立即数
 `define OP_BRANCH 7'b1100011  // B型指令
 `define OP_IMM    7'b0010011  // I型指令

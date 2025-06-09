@@ -1,3 +1,4 @@
+// pc 程序计数器
 module pc(
     PC_Write, clk_im_n, PC_o, PC_i,
     rst_n

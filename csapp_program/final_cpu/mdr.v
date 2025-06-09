@@ -1,3 +1,4 @@
+// mdr 数据寄存器
 module mdr(
     rst_n, clk_dm_n, MDR_o, MDR_i
 );
