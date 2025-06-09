@@ -1,9 +1,13 @@
 module cpu(
-    clk, rst_n
+    clk, rst_n, PC_out, IR_out, MDR_out, W_Data_out
 );
 
     input clk;
     input rst_n;
+    output [31:0] PC_out;
+    output [31:0] IR_out;
+    output [31:0] MDR_out;
+    output [31:0] W_Data_out;
 
     // 信号声明
     wire [31:0] inst;
@@ -208,5 +212,11 @@ module cpu(
         .MDR_i(M_R_Data),
         .MDR_o(MDR_o)
     );
+
+    // 输出信号赋值
+    assign PC_out = PC_o;
+    assign IR_out = inst;
+    assign MDR_out = MDR_o;
+    assign W_Data_out = F_;
 
 endmodule

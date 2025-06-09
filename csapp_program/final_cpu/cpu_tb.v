@@ -5,6 +5,12 @@ module cpu_tb();
     reg clk;
     reg rst_n;
     
+    // 输出信号 - CPU暴露的观察端口
+    wire [31:0] PC_out;
+    wire [31:0] IR_out;
+    wire [31:0] MDR_out;
+    wire [31:0] W_Data_out;
+    
     // 测试控制变量
     integer step_count = 0;
     reg [31:0] prev_pc = 32'hFFFFFFFF;
@@ -13,7 +19,11 @@ module cpu_tb();
     // 实例化被测试的CPU模块
     cpu uut (
         .clk(clk),
-        .rst_n(rst_n)
+        .rst_n(rst_n),
+        .PC_out(PC_out),
+        .IR_out(IR_out),
+        .MDR_out(MDR_out),
+        .W_Data_out(W_Data_out)
     );
     
     // 初始化
@@ -31,6 +41,11 @@ module cpu_tb();
         $display("说明：模拟板级实验中的手动控制");
         $display("- rst_n按键：复位PC和IR到0");
         $display("- clk按键：手动步进时钟，执行一步");
+        $display("观察端口：");
+        $display("- PC_out：程序计数器值");
+        $display("- IR_out：指令寄存器值");
+        $display("- MDR_out：内存数据寄存器值");
+        $display("- W_Data_out：写入寄存器堆的数据");
         $display("=========================================");
         
         // 等待一段时间后开始测试
@@ -90,72 +105,42 @@ module cpu_tb();
     
     // 任务：显示CPU当前状态
     task display_cpu_state();
-        reg [3:0] current_state;
         begin
-            current_state = uut.CU.ST;
             $display("--- CPU状态显示 ---");
-            $display("PC = 0x%08h", uut.PC_o);
-            $display("IR = 0x%08h (%s)", uut.inst, decode_simple_instruction(uut.inst));
-            $display("控制单元状态: %s", get_state_name(current_state));
-            
-            // 显示关键控制信号
-            $display("控制信号: PC_Write=%b, IR_Write=%b, Reg_Write=%b, Mem_Write=%b", 
-                     uut.PC_Write, uut.IR_Write, uut.Reg_Write, uut.Mem_Write);
+            $display("PC = 0x%08h", PC_out);
+            $display("IR = 0x%08h (%s)", IR_out, decode_simple_instruction(IR_out));
+            $display("MDR = 0x%08h", MDR_out);
+            $display("W_Data = 0x%08h", W_Data_out);
             
             // 检查PC变化
-            if (uut.PC_o != prev_pc) begin
-                if (uut.PC_o == prev_pc + 4) begin
-                    $display(">>> PC正确递增: 0x%08h -> 0x%08h (+4)", prev_pc, uut.PC_o);
+            if (PC_out != prev_pc) begin
+                if (PC_out == prev_pc + 4) begin
+                    $display(">>> PC正确递增: 0x%08h -> 0x%08h (+4)", prev_pc, PC_out);
                 end else begin
-                    $display(">>> PC跳转: 0x%08h -> 0x%08h", prev_pc, uut.PC_o);
+                    $display(">>> PC跳转: 0x%08h -> 0x%08h", prev_pc, PC_out);
                 end
-                prev_pc = uut.PC_o;
+                prev_pc = PC_out;
             end
             
             // 检查指令变化
-            if (uut.inst != prev_inst) begin
-                $display(">>> 新指令加载: 0x%08h", uut.inst);
-                prev_inst = uut.inst;
+            if (IR_out != prev_inst) begin
+                $display(">>> 新指令加载: 0x%08h", IR_out);
+                prev_inst = IR_out;
             end
             
-            // 显示寄存器操作
-            if (uut.Reg_Write) begin
-                $display(">>> 寄存器写入: R%0d <- 0x%08h", uut.rd, uut.F_);
+            // 显示写入寄存器的数据（当有写入时）
+            if (W_Data_out != 32'h00000000) begin
+                $display(">>> 寄存器写入数据: 0x%08h", W_Data_out);
             end
             
-            // 显示内存操作
-            if (uut.Mem_Write) begin
-                $display(">>> 内存写入: [0x%08h] <- 0x%08h", uut.F, uut.Reg_B);
+            // 显示内存读取的数据（当有数据时）
+            if (MDR_out != 32'h00000000) begin
+                $display(">>> 内存读取数据: 0x%08h", MDR_out);
             end
             
             $display("");
         end
     endtask
-    
-    // 函数：获取状态名称
-    function [127:0] get_state_name;
-        input [3:0] state;
-        begin
-            case (state)
-                4'b0000: get_state_name = "Idle";
-                4'b0001: get_state_name = "S1_Fetch";
-                4'b0010: get_state_name = "S2_Decode";
-                4'b0011: get_state_name = "S3_R_Execute";
-                4'b0100: get_state_name = "S4_WriteBack";
-                4'b0101: get_state_name = "S5_I_Execute";
-                4'b0110: get_state_name = "S6_LUI";
-                4'b0111: get_state_name = "S7_Mem_Addr";
-                4'b1000: get_state_name = "S8_Mem_Read";
-                4'b1001: get_state_name = "S9_Mem_WB";
-                4'b1010: get_state_name = "S10_Mem_Write";
-                4'b1011: get_state_name = "S11_JAL";
-                4'b1100: get_state_name = "S12_JALR";
-                4'b1101: get_state_name = "S13_Branch";
-                4'b1110: get_state_name = "S14_Branch_Decide";
-                default: get_state_name = "UNKNOWN";
-            endcase
-        end
-    endfunction
     
     // 函数：简单指令解码
     function [255:0] decode_simple_instruction;
