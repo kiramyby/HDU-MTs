@@ -93,7 +93,7 @@ module cpu(
     InstROM instROMInst(
         .clka(clk),
         .addra(PC_o[7:2]),
-        .doubta(inst_code)
+        .douta(inst_code)
     );
 
     id1 ID1(

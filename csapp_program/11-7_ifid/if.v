@@ -29,7 +29,7 @@ module if(
     InstROM instROMInst(
         .clka(clk_im),
         .addra(IM_Addr[7:2]),
-        .doubta(inst_code)
+        .douta(inst_code)
     );
 
     ir ir(
