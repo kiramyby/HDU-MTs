@@ -7,7 +7,7 @@ module id1 (
     output reg [6:0] opcode;
     output reg [2:0] funct3;
     output reg [6:0] funct7;
-    output reg [31:0] imm32;
+    output [31:0] imm32;
 
     always @(*) begin
         rs1 = inst[19:15];
