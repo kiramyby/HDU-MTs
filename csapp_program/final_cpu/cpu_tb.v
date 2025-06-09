@@ -65,9 +65,9 @@ module cpu_tb();
         #10;
         
         // 单步执行多个时钟周期
-        repeat(50) begin
+        repeat(100) begin
             press_clock();
-            #10;
+            #2;
         end
         
         $display("\n========== 测试完成 ==========");
@@ -79,7 +79,7 @@ module cpu_tb();
         begin
             $display(">>> 按下 rst_n 按键");
             rst_n = 0;
-            #10;
+            #5;
             step_count = 0;
             prev_pc = 32'hFFFFFFFF;
             prev_inst = 32'h00000000;
