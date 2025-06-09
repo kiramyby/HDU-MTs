@@ -65,7 +65,7 @@ module cpu_tb();
         #10;
         
         // 单步执行多个时钟周期
-        repeat(100) begin
+        repeat(120) begin
             press_clock();
             #2;
         end
