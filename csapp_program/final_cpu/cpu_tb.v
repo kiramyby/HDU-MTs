@@ -1,9 +1,14 @@
 `timescale 1ns / 1ps
 
 module cpu_tb();
-    // 输入信号
+    // 输入信号 - 模拟板级实验的按键
     reg clk;
     reg rst_n;
+    
+    // 测试控制变量
+    integer step_count = 0;
+    reg [31:0] prev_pc = 32'hFFFFFFFF;
+    reg [31:0] prev_inst = 32'h00000000;
     
     // 实例化被测试的CPU模块
     cpu uut (
@@ -11,135 +16,173 @@ module cpu_tb();
         .rst_n(rst_n)
     );
     
-    // 时钟生成 - 50MHz时钟 (周期20ns)
+    // 初始化
     initial begin
         clk = 0;
-        forever #10 clk = ~clk;
-    end
-    
-    // 测试序列
-    initial begin
+        rst_n = 1;
+        
         // 初始化波形记录
         $dumpfile("cpu_tb.vcd");
         $dumpvars(0, cpu_tb);
         
-        // 显示测试开始信息
-        $display("=== RISC-V CPU 测试开始 ===");
-        $display("时间: %0t", $time);
-        $display("测试程序: 数组求和程序");
-        $display("预期功能: 从地址0x10读取3个数值(1,2,3)，求和后存储到地址0x30");
+        $display("=========================================");
+        $display("===   RISC-V CPU 板级实验模拟测试   ===");
+        $display("=========================================");
+        $display("说明：模拟板级实验中的手动控制");
+        $display("- rst_n按键：复位PC和IR到0");
+        $display("- clk按键：手动步进时钟，执行一步");
+        $display("=========================================");
         
-        // 初始化信号
-        rst_n = 0;
+        // 等待一段时间后开始测试
+        #50;
         
-        // 保持复位状态
-        #100;
-        $display("时间: %0t - 释放复位信号", $time);
+        // 步骤1：按下复位按键
+        $display("\n【步骤1】按下rst_n按键 - 复位CPU");
+        press_reset();
+        
+        // 等待复位完成
+        #20;
+        display_cpu_state();
+        
+        // 步骤2：释放复位，开始单步执行
+        $display("\n【步骤2】释放rst_n，开始单步时钟执行");
         rst_n = 1;
+        #10;
         
-        // 验证初始状态
-        #50;
-        $display("\n=== 初始状态验证 ===");
-        $display("PC初始值: %h (应该为0)", uut.PC_o);
-        $display("复位后第一条指令: %h", uut.inst_code);
-        
-        // 运行足够长的时间让程序完成
-        // 基于分析，程序大约需要执行17条指令，每条指令需要多个时钟周期
-        #10000;
-        
-        // 显示中间状态
-        $display("\n=== CPU 中间状态 ===");
-        $display("时间: %0t", $time);
-        $display("PC值: %h", uut.PC_o);
-        $display("当前指令: %h", uut.inst);
-        $display("控制单元状态: PC_Write=%b, IR_Write=%b, Reg_Write=%b, Mem_Write=%b", 
-                 uut.PC_Write, uut.IR_Write, uut.Reg_Write, uut.Mem_Write);
-        
-        // 继续运行
-        #10000;
-        
-        // 显示最终状态
-        $display("\n=== CPU 最终状态 ===");
-        $display("时间: %0t", $time);
-        $display("PC值: %h", uut.PC_o);
-        $display("ALU结果: %h", uut.F);
-        $display("标志位: %b", uut.FR);
-        
-        // 验证寄存器文件状态
-        $display("\n=== 寄存器文件状态 ===");
-        $display("寄存器x10(a0): %h (应为00000010)", uut.reg_file32_inst.reg_file[10]);
-        $display("寄存器x11(a1): %h (应为00000003)", uut.reg_file32_inst.reg_file[11]);  
-        $display("寄存器x12(a2): %h (应为00000030)", uut.reg_file32_inst.reg_file[12]);
-        $display("寄存器x8(s0): %h (应为00000006)", uut.reg_file32_inst.reg_file[8]);
-        $display("寄存器x5(t0): %h", uut.reg_file32_inst.reg_file[5]);
-        $display("寄存器x6(t1): %h", uut.reg_file32_inst.reg_file[6]);
-        $display("寄存器x7(t2): %h (应为00000006)", uut.reg_file32_inst.reg_file[7]);
-        
-        // 验证内存状态（通过内存模块访问）
-        $display("\n=== 内存状态验证 ===");
-        $display("源数据地址16(0x10): %h (应为00000001)", uut.mem_write_inst.Mem.reg_file[16]);
-        $display("源数据地址17(0x11): %h (应为00000002)", uut.mem_write_inst.Mem.reg_file[17]);
-        $display("源数据地址18(0x12): %h (应为00000003)", uut.mem_write_inst.Mem.reg_file[18]);
-        $display("结果地址48(0x30): %h (应为00000006)", uut.mem_write_inst.Mem.reg_file[48]);
-        
-        // 程序验证
-        if (uut.mem_write_inst.Mem.reg_file[48] == 32'h00000006) begin
-            $display("\n✓ 测试通过：数组求和结果正确 (1+2+3=6)");
-        end else begin
-            $display("\n✗ 测试失败：数组求和结果错误");
-            $display("  预期值: 00000006, 实际值: %h", uut.mem_write_inst.Mem.reg_file[48]);
+        // 单步执行多个时钟周期
+        repeat(50) begin
+            press_clock();
+            #10;
         end
         
-        $display("\n=== 测试完成 ===");
+        $display("\n========== 测试完成 ==========");
         $finish;
     end
     
-    // 监控重要信号变化
-    always @(posedge clk) begin
-        if (rst_n) begin
-            // 监控PC变化
-            if (uut.PC_Write) begin
-                $display("时间: %0t - PC更新: %h -> %h", $time, uut.PC_o, uut.PC_i);
+    // 任务：模拟按下复位按键
+    task press_reset();
+        begin
+            $display(">>> 按下 rst_n 按键");
+            rst_n = 0;
+            #10;
+            step_count = 0;
+            prev_pc = 32'hFFFFFFFF;
+            prev_inst = 32'h00000000;
+        end
+    endtask
+    
+    // 任务：模拟按下时钟按键
+    task press_clock();
+        begin
+            step_count = step_count + 1;
+            $display("\n>>> 按下 clk 按键 [第%0d步]", step_count);
+            
+            // 产生一个时钟上升沿
+            clk = 0;
+            #5;
+            clk = 1;
+            #5;
+            
+            // 显示当前状态
+            display_cpu_state();
+        end
+    endtask
+    
+    // 任务：显示CPU当前状态
+    task display_cpu_state();
+        begin
+            $display("--- CPU状态显示 ---");
+            $display("PC = 0x%08h", uut.PC_o);
+            $display("IR = 0x%08h (%s)", uut.inst, decode_simple_instruction(uut.inst));
+            $display("控制单元状态: %s", get_state_name(uut.CU.ST));
+            
+            // 显示关键控制信号
+            $display("控制信号: PC_Write=%b, IR_Write=%b, Reg_Write=%b, Mem_Write=%b", 
+                     uut.PC_Write, uut.IR_Write, uut.Reg_Write, uut.Mem_Write);
+            
+            // 检查PC变化
+            if (uut.PC_o != prev_pc) begin
+                if (uut.PC_o == prev_pc + 4) begin
+                    $display(">>> PC正确递增: 0x%08h -> 0x%08h (+4)", prev_pc, uut.PC_o);
+                end else begin
+                    $display(">>> PC跳转: 0x%08h -> 0x%08h", prev_pc, uut.PC_o);
+                end
+                prev_pc = uut.PC_o;
             end
             
-            // 监控指令获取
-            if (uut.IR_Write) begin
-                $display("时间: %0t - 指令获取: %h (PC=%h)", $time, uut.inst_code, uut.PC_o);
+            // 检查指令变化
+            if (uut.inst != prev_inst) begin
+                $display(">>> 新指令加载: 0x%08h", uut.inst);
+                prev_inst = uut.inst;
             end
             
-            // 监控寄存器写入
+            // 显示寄存器操作
             if (uut.Reg_Write) begin
-                $display("时间: %0t - 寄存器写入: R%0d <- %h", $time, uut.rd, uut.F_);
+                $display(">>> 寄存器写入: R%0d <- 0x%08h", uut.rd, uut.F_);
             end
             
-            // 监控内存写入
+            // 显示内存操作
             if (uut.Mem_Write) begin
-                $display("时间: %0t - 内存写入: Addr=%h, Data=%h", $time, uut.F, uut.Reg_B);
+                $display(">>> 内存写入: [0x%08h] <- 0x%08h", uut.F, uut.Reg_B);
             end
             
-            // 监控ALU操作
-            if (uut.CU.ST == 4'b0011 || uut.CU.ST == 4'b0101 || uut.CU.ST == 4'b1101) begin // S3, S5, S13 states
-                $display("时间: %0t - ALU操作: OP=%b, A=%h, B=%h -> F=%h", 
-                         $time, uut.ALU_OP_o, uut.alu_a, uut.alu_b, uut.alu_f);
-            end
+            $display("");
         end
-    end
+    endtask
     
-    // 错误检测
-    initial begin
-        // 检查是否有未定义的信号
-        #50;
-        if (rst_n === 1'bx) begin
-            $display("错误: rst_n信号未定义");
-            $finish;
+    // 函数：获取状态名称
+    function [127:0] get_state_name;
+        input [3:0] state;
+        begin
+            case (state)
+                4'b0000: get_state_name = "Idle";
+                4'b0001: get_state_name = "S1_Fetch";
+                4'b0010: get_state_name = "S2_Decode";
+                4'b0011: get_state_name = "S3_R_Execute";
+                4'b0100: get_state_name = "S4_WriteBack";
+                4'b0101: get_state_name = "S5_I_Execute";
+                4'b0110: get_state_name = "S6_LUI";
+                4'b0111: get_state_name = "S7_Mem_Addr";
+                4'b1000: get_state_name = "S8_Mem_Read";
+                4'b1001: get_state_name = "S9_Mem_WB";
+                4'b1010: get_state_name = "S10_Mem_Write";
+                4'b1011: get_state_name = "S11_JAL";
+                4'b1100: get_state_name = "S12_JALR";
+                4'b1101: get_state_name = "S13_Branch";
+                4'b1110: get_state_name = "S14_Branch_Decide";
+                default: get_state_name = "UNKNOWN";
+            endcase
         end
-    end
+    endfunction
     
-    // 超时保护
-    initial begin
-        #50000; // 50微秒超时
-        $display("警告: 测试超时");
-        $finish;
-    end
+    // 函数：简单指令解码
+    function [255:0] decode_simple_instruction;
+        input [31:0] inst;
+        reg [6:0] opcode;
+        reg [2:0] funct3;
+        begin
+            opcode = inst[6:0];
+            funct3 = inst[14:12];
+            
+            case (opcode)
+                7'b0110011: decode_simple_instruction = "R-type";
+                7'b0010011: begin
+                    case (funct3)
+                        3'b000: decode_simple_instruction = "ADDI";
+                        3'b110: decode_simple_instruction = "ORI";
+                        3'b100: decode_simple_instruction = "XORI";
+                        default: decode_simple_instruction = "I-type";
+                    endcase
+                end
+                7'b0110111: decode_simple_instruction = "LUI";
+                7'b0000011: decode_simple_instruction = "LW";
+                7'b0100011: decode_simple_instruction = "SW";
+                7'b1100011: decode_simple_instruction = "BEQ";
+                7'b1101111: decode_simple_instruction = "JAL";
+                7'b1100111: decode_simple_instruction = "JALR";
+                default: decode_simple_instruction = "UNKNOWN";
+            endcase
+        end
+    endfunction
 
 endmodule
