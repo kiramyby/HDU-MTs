@@ -19,9 +19,6 @@ module cpu(
     wire [3:0] alu_fr, FR, ALU_OP, ALU_OP_o;
     wire [31:0] M_R_Data, MDR_o;
     
-    // 时钟信号
-    assign clk_im = clk;
-    
     // 控制信号
     wire PC_Write, PC0_Write, IR_Write, Reg_Write, Mem_Write;
     wire rs2_imm_s;
@@ -90,7 +87,7 @@ module cpu(
     );
 
     InstROM instROMInst(
-        .clka(clk_im),
+        .clka(clk),
         .addra(PC_o[7:2]),
         .doubta(inst_code)
     );
