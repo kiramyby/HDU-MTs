@@ -90,11 +90,13 @@ module cpu_tb();
     
     // 任务：显示CPU当前状态
     task display_cpu_state();
+        reg [3:0] current_state;
         begin
+            current_state = uut.CU.ST;
             $display("--- CPU状态显示 ---");
             $display("PC = 0x%08h", uut.PC_o);
             $display("IR = 0x%08h (%s)", uut.inst, decode_simple_instruction(uut.inst));
-            $display("控制单元状态: %s", get_state_name(uut.CU.ST));
+            $display("控制单元状态: %s", get_state_name(current_state));
             
             // 显示关键控制信号
             $display("控制信号: PC_Write=%b, IR_Write=%b, Reg_Write=%b, Mem_Write=%b", 
