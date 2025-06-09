@@ -1,5 +1,5 @@
-// CU 控制单元
-module CU (
+// cu 控制单元
+module cu (
     IS_R, IS_IMM, IS_LUI, IS_LW, IS_SW, IS_BEQ, IS_JALR, IS_JAL, clk, rst_n, ALU_OP,
     ZF_rs,
     PC_Write, PC0_Write, IR_Write, Reg_Write, Mem_Write, rs2_imm_s, w_data_s, PC_s, ALU_OP_o
