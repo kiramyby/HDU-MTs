@@ -94,9 +94,9 @@ module cpu_tb();
             
             // 产生一个时钟上升沿
             clk = 0;
-            #5;
+            #2;
             clk = 1;
-            #5;
+            #2;
             
             // 显示当前状态
             display_cpu_state();
