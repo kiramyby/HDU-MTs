@@ -13,7 +13,8 @@ BankSum:
 L:  lw      t3,     0(t0)
     add     t2,     t2,     t3
     addi    t0,     t0,     4
+    addi    t1,     t1,     -1
     beq     t1,     zero,exit
-    jal     L
+    j       L
 exit: sw    t2,0(a2)
       jr    ra
