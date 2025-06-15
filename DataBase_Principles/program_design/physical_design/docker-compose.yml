@@ -1,61 +1,74 @@
+# 医院管理系统 Docker Compose 配置
+# filepath: /Users/kiracoon/college/HDU-MTs/DataBase_Principles/program_design/physical_design/docker-compose.yml
 version: '3.8'
 
 services:
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0.33
     container_name: hospital_management_db
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: hospital_management
-      MYSQL_USER: hospital_user
-      MYSQL_PASSWORD: hospital_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hospital_management}
+      MYSQL_USER: ${MYSQL_USER:-hospital_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-hospital_pass}
     ports:
       - "3306:3306"
     volumes:
       # 直接挂载SQL文件到初始化目录
-      - ./fixed_hospital_management_system.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./hospital_management_system.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./data_test.sql:/docker-entrypoint-initdb.d/02-data.sql
       - ./procedures.sql:/docker-entrypoint-initdb.d/03-procedures.sql
       - ./triggers.sql:/docker-entrypoint-initdb.d/04-triggers.sql
       - ./views.sql:/docker-entrypoint-initdb.d/05-views.sql
-      # 挂载测试SQL文件
-      - ./fixed_procedure_tests.sql:/tests/procedure_tests.sql
-      - ./fixed_trigger_tests.sql:/tests/trigger_tests.sql
-      - ./fixed_view_tests.sql:/tests/view_tests.sql
-      # 同时挂载原始测试脚本作为参考
-      - ./procedure_tests.sql:/tests/original_procedure_tests.sql
-      - ./trigger_tests.sql:/tests/original_trigger_tests.sql
-      - ./view_tests.sql:/tests/original_view_tests.sql
-      # 入口点包装脚本
-      - ./mysql-entrypoint-wrapper.sh:/mysql-entrypoint-wrapper.sh
       # 持久化数据存储
       - mysql_data:/var/lib/mysql
       # MySQL配置文件
-      - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ./mysql.cnf:/etc/mysql/conf.d/custom.cnf
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
     networks:
       - hospital_network
     command: --default-authentication-plugin=mysql_native_password
-    entrypoint: ["/bin/bash", "/mysql-entrypoint-wrapper.sh", "docker-entrypoint.sh", "mysqld"]
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
-      timeout: 20s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
+      interval: 10s
+      timeout: 5s
       retries: 10
+      start_period: 30s
 
   adminer:
-    image: adminer:latest
+    image: adminer:4.8.1
     container_name: hospital_adminer
-    restart: always
+    restart: unless-stopped
     ports:
       - "8080:8080"
     networks:
       - hospital_network
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   mysql_data:
+    name: hospital_mysql_data
+    driver: local
 
 networks:
   hospital_network:
+    name: hospital_network
     driver: bridge
