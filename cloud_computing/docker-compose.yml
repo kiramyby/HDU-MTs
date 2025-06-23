@@ -1,0 +1,21 @@
+# 定义服务
+services:
+  vm1:
+    image: alpine:latest
+    container_name: vm1
+    command: tail -f /dev/null # 保持容器持续运行，否则它会立即退出
+    networks:
+      - vnet
+
+  vm2:
+    image: alpine:latest
+    container_name: vm2
+    command: tail -f /dev/null
+    networks:
+      - vnet
+
+# 定义网络
+networks:
+  # 创建名为 vnet 的自定义桥接网络
+  vnet:
+    driver: bridge
