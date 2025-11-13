@@ -31,10 +31,6 @@ module cpu_tb();
         clk = 0;
         rst_n = 1;
         
-        // 初始化波形记录
-        $dumpfile("cpu_tb.vcd");
-        $dumpvars(0, cpu_tb);
-        
         $display("=========================================");
         $display("===   RISC-V CPU 板级实验模拟测试   ===");
         $display("=========================================");
@@ -108,7 +104,7 @@ module cpu_tb();
         begin
             $display("--- CPU状态显示 ---");
             $display("PC = 0x%08h", PC_out);
-            $display("IR = 0x%08h (%s)", IR_out, decode_simple_instruction(IR_out));
+            $display("IR = 0x%08h", IR_out);
             $display("MDR = 0x%08h", MDR_out);
             $display("W_Data = 0x%08h", W_Data_out);
             
@@ -141,35 +137,5 @@ module cpu_tb();
             $display("");
         end
     endtask
-    
-    // 函数：简单指令解码
-    function [255:0] decode_simple_instruction;
-        input [31:0] inst;
-        reg [6:0] opcode;
-        reg [2:0] funct3;
-        begin
-            opcode = inst[6:0];
-            funct3 = inst[14:12];
-            
-            case (opcode)
-                7'b0110011: decode_simple_instruction = "R-type";
-                7'b0010011: begin
-                    case (funct3)
-                        3'b000: decode_simple_instruction = "ADDI";
-                        3'b110: decode_simple_instruction = "ORI";
-                        3'b100: decode_simple_instruction = "XORI";
-                        default: decode_simple_instruction = "I-type";
-                    endcase
-                end
-                7'b0110111: decode_simple_instruction = "LUI";
-                7'b0000011: decode_simple_instruction = "LW";
-                7'b0100011: decode_simple_instruction = "SW";
-                7'b1100011: decode_simple_instruction = "BEQ";
-                7'b1101111: decode_simple_instruction = "JAL";
-                7'b1100111: decode_simple_instruction = "JALR";
-                default: decode_simple_instruction = "UNKNOWN";
-            endcase
-        end
-    endfunction
 
 endmodule
