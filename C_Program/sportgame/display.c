@@ -107,7 +107,7 @@ void print_centered_text(const char* text, int width) {
 void print_menu_item(int number, const char* text) {
     printf("  %s%s[%d]%s %s%s%s\n", 
            CYAN, BOLD, number, RESET_COLOR,
-           WHITE, text, RESET_COLOR);
+           BLACK, text, RESET_COLOR);
 }
 
 // 打印成功消息
@@ -391,9 +391,9 @@ void wait_for_enter() {
 void display_page_info(int current_page, int total_pages) {
     printf("\n%s%s第 %d 页，共 %d 页%s", BLUE, BOLD, current_page, total_pages, RESET_COLOR);
     if (current_page < total_pages) {
-        printf("  %s%s[Enter]下一页 [q]退出查看%s", CYAN, BOLD, RESET_COLOR);
+        printf("  %s%s[空格]下一页 [b]返回上一页 [q]退出查看%s", CYAN, BOLD, RESET_COLOR);
     } else {
-        printf("  %s%s[Enter]返回 [q]退出查看%s", CYAN, BOLD, RESET_COLOR);
+        printf("  %s%s[b]返回上一页 [q]退出查看%s", CYAN, BOLD, RESET_COLOR);
     }
 }
 

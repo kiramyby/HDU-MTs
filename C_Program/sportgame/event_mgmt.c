@@ -113,8 +113,10 @@ void show_all_events() {
         
         if (input == 'q' || input == 'Q') {
             break;
-        } else if (input == '\n' || input == ' ') {
+        } else if (input == ' ') {
             current_page++;
+        } else if ((input == 'b' || input == 'B') && current_page > 1) {
+            current_page--;
         }
     }
     

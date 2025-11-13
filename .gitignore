@@ -85,3 +85,14 @@ Desktop.ini
 C_Program/SIM/StudentInformationManager/store
 *.dSYM/
 *.dat
+
+# extra
+*.zip
+*.env
+*.pdf
+*.word
+
+# python
+__pycache__
+datasets
+saved
